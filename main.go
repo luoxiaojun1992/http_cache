@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -30,11 +31,11 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	//todo host
 	cache_key := cacheKey(r.Method, router["www.baidu.com"]+uri, r.Body)
 	if val, ok := header_cache[cache_key]; ok {
-	    for key, values := range val {
-		for _, value := range values {
-			w.Header().Add(key, value)
+		for key, values := range val {
+			for _, value := range values {
+				w.Header().Add(key, value)
+			}
 		}
-	    }
 	}
 	if val, ok := body_cache[cache_key]; ok {
 		w.Write(val)
@@ -90,7 +91,11 @@ func main() {
 	//Router Config
 	router = make(map[string]string)
 	//todo more complex
-	router["www.baidu.com"] = "http://www.dodoca.com"
+	router_config, err := ioutil.ReadFile("./router_config.json")
+	if err != nil {
+		log.Fatal(err)
+	}
+	json.Unmarshal(router_config, &router)
 
 	//Init Cache
 	body_cache = make(map[string][]byte)
