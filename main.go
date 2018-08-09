@@ -28,8 +28,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Read Cache
-	//todo host
-	cache_key := cacheKey(r.Method, router["www.baidu.com"]+uri, r.Body)
+	cache_key := cacheKey(r.Method, router[r.Host]+uri, r.Body)
 	if val, ok := header_cache[cache_key]; ok {
 		for key, values := range val {
 			for _, value := range values {
@@ -42,7 +41,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	proxy_r, err := http.NewRequest(r.Method, router["www.baidu.com"]+uri, r.Body)
+	proxy_r, err := http.NewRequest(r.Method, router[r.Host]+uri, r.Body)
 	if err != nil {
 		//todo log
 		fmt.Println(err)
@@ -88,6 +87,8 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	//todo goroutine config
+
 	//Router Config
 	router = make(map[string]string)
 	//todo more complex
@@ -98,6 +99,7 @@ func main() {
 	json.Unmarshal(router_config, &router)
 
 	//Init Cache
+	//todo using redis
 	body_cache = make(map[string][]byte)
 	header_cache = make(map[string]map[string][]string)
 
