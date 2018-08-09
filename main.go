@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
+	"github.com/go-redis/redis"
 	"io"
 	"io/ioutil"
 	"log"
@@ -15,8 +16,7 @@ import (
 var router map[string]string
 
 //Cache Storage
-var body_cache map[string][]byte
-var header_cache map[string]map[string][]string
+var redis_client *redis.Client
 
 //HTTP Handler
 type myHandler struct{}
@@ -30,16 +30,30 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	//Read Cache
 	cache_key := cacheKey(r.Method, router[r.Host]+uri, r.Body)
-	if val, ok := header_cache[cache_key]; ok {
-		for key, values := range val {
-			for _, value := range values {
-				w.Header().Add(key, value)
+	res, err := redis_client.Exists("header:" + cache_key).Result()
+	if err == nil {
+		if res > 0 {
+			res, err := redis_client.Get("header:" + cache_key).Result()
+			if err == nil && len(res) > 0 {
+				val := make(map[string][]string)
+				json.Unmarshal([]byte(res), &val)
+				for key, values := range val {
+					for _, value := range values {
+						w.Header().Add(key, value)
+					}
+				}
+				res, err := redis_client.Exists(cache_key).Result()
+				if err == nil {
+					if res > 0 {
+						res, err := redis_client.Get(cache_key).Result()
+						if err == nil {
+							w.Write([]byte(res))
+							return
+						}
+					}
+				}
 			}
 		}
-	}
-	if val, ok := body_cache[cache_key]; ok {
-		w.Write(val)
-		return
 	}
 
 	//Proxy Request
@@ -72,7 +86,10 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Update Header Cache
-	header_cache[cache_key] = resp.Header
+	header_str, err := json.Marshal(resp.Header)
+	if err == nil {
+		redis_client.Set("header:"+cache_key, string(header_str), 0)
+	}
 
 	//Transfer Body
 	body, err := ioutil.ReadAll(resp.Body)
@@ -85,7 +102,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Write(body)
 
 	//Update Body Cache
-	body_cache[cache_key] = body
+	redis_client.Set(cache_key, string(body), 0)
 }
 
 func main() {
@@ -101,9 +118,12 @@ func main() {
 	json.Unmarshal(router_config, &router)
 
 	//Init Cache
-	//todo using redis
-	body_cache = make(map[string][]byte)
-	header_cache = make(map[string]map[string][]string)
+	//todo config
+	redis_client = redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
 
 	//Start Proxy Server
 	s := &http.Server{
