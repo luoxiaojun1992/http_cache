@@ -11,20 +11,24 @@ import (
 type myHandler struct{}
 
 func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	//Debug
-	fmt.Println(r.URL.Path + "?" + r.URL.RawQuery + "#" + r.URL.Fragment)
-
-	//Compose URI
-	uri := r.URL.Path
-	if len(r.URL.RawQuery) > 0 {
-		uri += ("?" + r.URL.RawQuery)
-	}
-	if len(r.URL.Fragment) > 0 {
-		uri += ("#" + r.URL.Fragment)
-	}
-
 	//Proxy Request
-	resp, err := http.Get("https://www.baidu.com/" + uri)
+	client := &http.Client{}
+	uri := r.URL.RequestURI()
+	if len(r.URL.Fragment) > 0 {
+		uri += r.URL.Fragment
+	}
+	proxy_r, err := http.NewRequest(r.Method, "http://www.dodoca.com" + uri, r.Body)
+	if err != nil {
+		//todo log
+		fmt.Println(err)
+		w.Write([]byte{})
+		return
+	}
+	proxy_r.Header = r.Header
+	for _, cookie := range r.Cookies() {
+		proxy_r.AddCookie(cookie)
+	}
+	resp, err := client.Do(proxy_r)
 	defer resp.Body.Close()
 	if err != nil {
 		//todo log
