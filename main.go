@@ -22,7 +22,7 @@ var header_cache map[string]map[string][]string
 type myHandler struct{}
 
 func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	//Proxy Request
+	//Compose URI
 	uri := r.URL.RequestURI()
 	if len(r.URL.Fragment) > 0 {
 		uri += r.URL.Fragment
@@ -42,6 +42,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	//Proxy Request
 	proxy_r, err := http.NewRequest(r.Method, router[r.Host]+uri, r.Body)
 	if err != nil {
 		//todo log
