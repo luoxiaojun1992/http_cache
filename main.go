@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -9,6 +10,9 @@ import (
 )
 
 var router map[string]string
+
+var body_cache map[string][]byte
+var header_cache map[string]map[string][]string
 
 type myHandler struct{}
 
@@ -18,6 +22,22 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if len(r.URL.Fragment) > 0 {
 		uri += r.URL.Fragment
 	}
+
+	//Read Cache
+	//todo host
+	cache_key := cacheKey(r.Method, router["www.baidu.com"]+uri, r.Body)
+	if val, ok := header_cache[cache_key]; ok {
+	    for key, values := range val {
+		for _, value := range values {
+			w.Header().Add(key, value)
+		}
+	    }
+	}
+	if val, ok := body_cache[cache_key]; ok {
+		w.Write(val)
+		return
+	}
+
 	proxy_r, err := http.NewRequest(r.Method, router["www.baidu.com"]+uri, r.Body)
 	if err != nil {
 		//todo log
@@ -46,6 +66,9 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	//Update Header Cache
+	header_cache[cache_key] = resp.Header
+
 	//Transfer Body
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -55,12 +78,20 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.Write(body)
+
+	//Update Body Cache
+	body_cache[cache_key] = body
 }
 
 func main() {
 	//Router Config
 	router = make(map[string]string)
+	//todo more complex
 	router["www.baidu.com"] = "http://www.dodoca.com"
+
+	//Init Cache
+	body_cache = make(map[string][]byte)
+	header_cache = make(map[string]map[string][]string)
 
 	//Start Proxy Server
 	s := &http.Server{
@@ -71,4 +102,19 @@ func main() {
 		MaxHeaderBytes: 1 << 20,
 	}
 	log.Fatal(s.ListenAndServe())
+}
+
+func cacheKey(method string, url string, body io.ReadCloser) string {
+	body_str := ""
+	if body != nil {
+		body_byte, err := ioutil.ReadAll(body)
+		if err != nil {
+			//todo log
+			fmt.Println(err)
+			return ""
+		}
+		body_str = string(body_byte)
+	}
+	//todo md5 or hash
+	return method + ":" + url + ":" + body_str
 }
