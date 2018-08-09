@@ -1,23 +1,24 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"time"
-	"fmt"
 )
+
+var router map[string]string
 
 type myHandler struct{}
 
 func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	//Proxy Request
-	client := &http.Client{}
 	uri := r.URL.RequestURI()
 	if len(r.URL.Fragment) > 0 {
 		uri += r.URL.Fragment
 	}
-	proxy_r, err := http.NewRequest(r.Method, "http://www.dodoca.com" + uri, r.Body)
+	proxy_r, err := http.NewRequest(r.Method, router["www.baidu.com"]+uri, r.Body)
 	if err != nil {
 		//todo log
 		fmt.Println(err)
@@ -28,6 +29,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for _, cookie := range r.Cookies() {
 		proxy_r.AddCookie(cookie)
 	}
+	client := &http.Client{}
 	resp, err := client.Do(proxy_r)
 	defer resp.Body.Close()
 	if err != nil {
@@ -56,6 +58,11 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	//Router Config
+	router = make(map[string]string)
+	router["www.baidu.com"] = "http://www.dodoca.com"
+
+	//Start Proxy Server
 	s := &http.Server{
 		Addr:           ":8888",
 		Handler:        &myHandler{},
