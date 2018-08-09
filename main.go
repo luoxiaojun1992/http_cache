@@ -9,6 +9,9 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"regexp"
+	"strings"
+	"sync"
 	"time"
 )
 
@@ -47,7 +50,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					if res > 0 {
 						res, err := redis_client.Get("body:" + cache_key).Result()
 						if err == nil {
-							w.Write([]byte(res))
+							w.Write([]byte(fillDynamicContent(res)))
 							return
 						}
 					}
@@ -99,7 +102,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte{})
 		return
 	}
-	w.Write(body)
+	w.Write([]byte(fillDynamicContent(string(body))))
 
 	//Update Body Cache
 	redis_client.Set("body:"+cache_key, string(body), 0)
@@ -151,4 +154,46 @@ func cacheKey(method string, url string, body io.ReadCloser) string {
 	hmd5 := md5.New()
 	io.WriteString(hmd5, method+":"+url+":"+body_str)
 	return string(hmd5.Sum(nil))
+}
+
+func fillDynamicContent(body string) string {
+	dynamic_contents := make(map[string]string)
+	re := regexp.MustCompile(`\<dynamic\>.+\</dynamic\>`)
+	dynamic_tags := re.FindAllString(body, -1)
+	var wg sync.WaitGroup
+	var mutex_lock sync.Mutex
+	for i, dynamic_tag := range dynamic_tags {
+		if i >= 10 {
+			break
+		}
+		go func() {
+			defer wg.Done()
+
+			dynamic_url := strings.Replace(dynamic_tag, "<dynamic>", "", 1)
+			dynamic_url = strings.Replace(dynamic_url, "</dynamic>", "", 1)
+			if val, ok := dynamic_contents[dynamic_url]; ok {
+				mutex_lock.Lock()
+				body = strings.Replace(body, dynamic_tag, val, 1)
+				mutex_lock.Unlock()
+				return
+			}
+
+			resp, err := http.Get(dynamic_url)
+			defer resp.Body.Close()
+			if err == nil {
+				dynamic_content, err := ioutil.ReadAll(resp.Body)
+				if err == nil {
+					dynamic_content_str := string(dynamic_content)
+					dynamic_contents[dynamic_url] = dynamic_content_str
+					mutex_lock.Lock()
+					body = strings.Replace(body, dynamic_tag, dynamic_content_str, 1)
+					mutex_lock.Unlock()
+				}
+			}
+		}()
+		wg.Add(1)
+	}
+	wg.Wait()
+
+	return body
 }
