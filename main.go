@@ -1,6 +1,7 @@
 package main
 
 import (
+	"crypto/md5"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -125,6 +126,8 @@ func cacheKey(method string, url string, body io.ReadCloser) string {
 		}
 		body_str = string(body_byte)
 	}
-	//todo md5 or hash
-	return method + ":" + url + ":" + body_str
+
+	md5 := md5.New()
+	io.WriteString(md5, method+":"+url+":"+body_str)
+	return string(md5.Sum(nil))
 }
