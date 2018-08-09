@@ -9,11 +9,14 @@ import (
 	"time"
 )
 
+//Router Config
 var router map[string]string
 
+//Cache Storage
 var body_cache map[string][]byte
 var header_cache map[string]map[string][]string
 
+//HTTP Handler
 type myHandler struct{}
 
 func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
