@@ -42,10 +42,10 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 						w.Header().Add(key, value)
 					}
 				}
-				res, err := redis_client.Exists(cache_key).Result()
+				res, err := redis_client.Exists("body:" + cache_key).Result()
 				if err == nil {
 					if res > 0 {
-						res, err := redis_client.Get(cache_key).Result()
+						res, err := redis_client.Get("body:" + cache_key).Result()
 						if err == nil {
 							w.Write([]byte(res))
 							return
@@ -102,7 +102,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Write(body)
 
 	//Update Body Cache
-	redis_client.Set(cache_key, string(body), 0)
+	redis_client.Set("body:"+cache_key, string(body), 0)
 }
 
 func main() {
