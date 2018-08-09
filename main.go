@@ -127,7 +127,7 @@ func cacheKey(method string, url string, body io.ReadCloser) string {
 		body_str = string(body_byte)
 	}
 
-	md5 := md5.New()
-	io.WriteString(md5, method+":"+url+":"+body_str)
-	return string(md5.Sum(nil))
+	hmd5 := md5.New()
+	io.WriteString(hmd5, method+":"+url+":"+body_str)
+	return string(hmd5.Sum(nil))
 }
