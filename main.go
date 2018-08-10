@@ -12,6 +12,7 @@ import (
 	"net/http"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -32,9 +33,9 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	//Read Cache
 	redis_client := redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
-		DB:       0,  // use default DB
+		Addr:     env("REDIS_HOST", "localhost") + ":" + env("REDIS_PORT", "6379"),
+		Password: env("REDIS_PASSWORD", ""), // no password set
+		DB:       envInt("REDIS_DB", 0),     // use default DB
 	})
 	defer redis_client.Close()
 
@@ -209,6 +210,18 @@ func env(key, default_value string) string {
 
 	if len(val) > 0 {
 		return val
+	}
+
+	return default_value
+}
+
+func envInt(key string, default_value int) int {
+	val := env(key, "")
+	if len(val) > 0 {
+		i, err := strconv.Atoi(val)
+		if err == nil {
+			return i
+		}
 	}
 
 	return default_value
