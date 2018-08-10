@@ -1,6 +1,7 @@
 package main
 
 import (
+	_ "net/http/pprof"
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
@@ -18,6 +19,9 @@ import (
 	"time"
 )
 
+//Cache Storage
+var redis_client *redis.Client
+
 //Router Config
 var router map[string]string
 
@@ -32,13 +36,6 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Read Cache
-	redis_client := redis.NewClient(&redis.Options{
-		Addr:     env("REDIS_HOST", "localhost") + ":" + env("REDIS_PORT", "6379"),
-		Password: env("REDIS_PASSWORD", ""), // no password set
-		DB:       envInt("REDIS_DB", 0),     // use default DB
-	})
-	defer redis_client.Close()
-
 	cache_key := cacheKey(r.Method, router[r.Host]+uri, r.Body)
 	res, err := redis_client.Exists("header:" + cache_key).Result()
 	if err == nil {
@@ -80,13 +77,13 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	client := &http.Client{}
 	resp, err := client.Do(proxy_r)
-	defer resp.Body.Close()
 	if err != nil {
 		//todo log
 		fmt.Println(err)
 		w.Write([]byte{})
 		return
 	}
+	defer resp.Body.Close()
 
 	//Transfer Headers
 	for key, values := range resp.Header {
@@ -109,20 +106,34 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte{})
 		return
 	}
-	w.Write([]byte(fillDynamicContent(string(body))))
+	body_str := string(body)
+	w.Write([]byte(fillDynamicContent(body_str)))
 
 	//Update Body Cache
-	redis_client.Set("body:"+cache_key, string(body), 0)
+	redis_client.Set("body:"+cache_key, body_str, 0)
 }
 
 func main() {
-	//todo goroutine config
+	//pprof
+	//todo switch
+    	go func() {
+        	log.Println(http.ListenAndServe("localhost:6060", nil))
+    	}()
 
 	//Init Env
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	//Init Cache
+	redis_client = redis.NewClient(&redis.Options{
+		Addr:     env("REDIS_HOST", "localhost") + ":" + env("REDIS_PORT", "6379"),
+		Password: env("REDIS_PASSWORD", ""), // no password set
+		DB:       envInt("REDIS_DB", 0),     // use default DB
+		PoolSize: envInt("REDIS_POOL_SIZE", 200),
+	})
+	defer redis_client.Close()
 
 	//Router Config
 	router = make(map[string]string)
@@ -164,9 +175,13 @@ func cacheKey(method string, url string, body io.ReadCloser) string {
 }
 
 func fillDynamicContent(body string) string {
-	dynamic_contents := make(map[string]string)
 	re := regexp.MustCompile(`\<dynamic\>.+\</dynamic\>`)
 	dynamic_tags := re.FindAllString(body, -1)
+	if len(dynamic_tags) <= 0 {
+		return body
+	}
+
+	dynamic_contents := make(map[string]string)
 	var wg sync.WaitGroup
 	var mutex_lock sync.Mutex
 	for i, dynamic_tag := range dynamic_tags {
@@ -186,8 +201,9 @@ func fillDynamicContent(body string) string {
 			}
 
 			resp, err := http.Get(dynamic_url)
-			defer resp.Body.Close()
 			if err == nil {
+				defer resp.Body.Close()
+
 				dynamic_content, err := ioutil.ReadAll(resp.Body)
 				if err == nil {
 					dynamic_content_str := string(dynamic_content)
