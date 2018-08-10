@@ -137,7 +137,7 @@ func main() {
 
 	//Start Proxy Server
 	s := &http.Server{
-		Addr:           ":" + env("HTTP_PORT", "8888"),
+		Addr:           env("HTTP_HOST", "0.0.0.0") + ":" + env("HTTP_PORT", "8888"),
 		Handler:        &myHandler{},
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
