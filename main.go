@@ -5,10 +5,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-redis/redis"
+	"github.com/joho/godotenv"
 	"io"
 	"io/ioutil"
 	"log"
 	"net/http"
+	"os"
 	"regexp"
 	"strings"
 	"sync"
@@ -115,6 +117,12 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func main() {
 	//todo goroutine config
 
+	//Init Env
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal(err)
+	}
+
 	//Router Config
 	router = make(map[string]string)
 	//todo more complex
@@ -122,11 +130,13 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	json.Unmarshal(router_config, &router)
+	if len(router_config) > 0 {
+		json.Unmarshal(router_config, &router)
+	}
 
 	//Start Proxy Server
 	s := &http.Server{
-		Addr:           ":8888",
+		Addr:           ":" + env("HTTP_PORT", "8888"),
 		Handler:        &myHandler{},
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
@@ -192,4 +202,14 @@ func fillDynamicContent(body string) string {
 	wg.Wait()
 
 	return body
+}
+
+func env(key, default_value string) string {
+	val := os.Getenv(key)
+
+	if len(val) > 0 {
+		return val
+	}
+
+	return default_value
 }
