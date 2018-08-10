@@ -36,10 +36,11 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Fetch Router Config
+	request_host := r.Header.Get("x-real-host")
 	router_config := make(map[string]string)
-	v, ok := router[r.Host][r.Method][uri]
+	v, ok := router[request_host][r.Method][uri]
 	if !ok {
-		v, ok := router[r.Host][r.Method]["*"]
+		v, ok := router[request_host][r.Method]["*"]
 		if !ok {
 			w.Write([]byte{})
 			return
@@ -165,8 +166,7 @@ func main() {
 
 	//Router Config
 	router = make(map[string](map[string](map[string](map[string]string))))
-	//todo more complex
-	router_config, err := ioutil.ReadFile("./router_config.json")
+	router_config, err := ioutil.ReadFile("../router_config.json")
 	if err != nil {
 		log.Fatal(err)
 	}

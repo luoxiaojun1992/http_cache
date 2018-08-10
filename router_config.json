@@ -1,5 +1,5 @@
 {
-    "localhost:8888":{
+    "www.ddc.com":{
         "GET":{
             "/":{
                 "host":"http://www.dodoca.com",
