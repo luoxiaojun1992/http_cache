@@ -19,6 +19,10 @@ import (
 	"time"
 )
 
+const (
+	CACHE_ENABLED = "1"
+)
+
 //Cache Storage
 var redis_client *redis.Client
 
@@ -53,7 +57,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	//Read Cache
 	cache_key := ""
-	if router_config["cache"] == "1" {
+	if router_config["cache"] == CACHE_ENABLED {
 		cache_key = cacheKey(r.Method, router_config["host"]+uri, r.Body)
 		res, err := redis_client.Exists("header:" + cache_key).Result()
 		if err == nil {
@@ -112,7 +116,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Update Header Cache
-	if router_config["cache"] == "1" {
+	if router_config["cache"] == CACHE_ENABLED {
 		header_str, err := json.Marshal(resp.Header)
 		if err == nil {
 			ttl, err := time.ParseDuration(router_config["ttl"])
@@ -134,7 +138,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fillDynamicContent(body_str)))
 
 	//Update Body Cache
-	if router_config["cache"] == "1" {
+	if router_config["cache"] == CACHE_ENABLED {
 		ttl, err := time.ParseDuration(router_config["ttl"])
                 if err == nil {
 			redis_client.Set("body:"+cache_key, body_str, ttl)
