@@ -1,7 +1,6 @@
 package main
 
 import (
-	_ "net/http/pprof"
 	"crypto/md5"
 	"encoding/json"
 	"fmt"
@@ -11,6 +10,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	_ "net/http/pprof"
 	"os"
 	"regexp"
 	"strconv"
@@ -23,7 +23,7 @@ import (
 var redis_client *redis.Client
 
 //Router Config
-var router map[string]string
+var router map[string](map[string](map[string](map[string]string)))
 
 //HTTP Handler
 type myHandler struct{}
@@ -35,27 +35,45 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		uri += r.URL.Fragment
 	}
 
+	//Fetch Router Config
+	router_config := make(map[string]string)
+	v, ok := router[r.Host][r.Method][uri]
+	if !ok {
+		v, ok := router[r.Host][r.Method]["*"]
+		if !ok {
+			w.Write([]byte{})
+			return
+		} else {
+			router_config = v
+		}
+	} else {
+		router_config = v
+	}
+
 	//Read Cache
-	cache_key := cacheKey(r.Method, router[r.Host]+uri, r.Body)
-	res, err := redis_client.Exists("header:" + cache_key).Result()
-	if err == nil {
-		if res > 0 {
-			res, err := redis_client.Get("header:" + cache_key).Result()
-			if err == nil && len(res) > 0 {
-				val := make(map[string][]string)
-				json.Unmarshal([]byte(res), &val)
-				for key, values := range val {
-					for _, value := range values {
-						w.Header().Add(key, value)
+	cache_key := ""
+	if router_config["cache"] == "1" {
+		cache_key = cacheKey(r.Method, router_config["host"]+uri, r.Body)
+		res, err := redis_client.Exists("header:" + cache_key).Result()
+		if err == nil {
+			if res > 0 {
+				res, err := redis_client.Get("header:" + cache_key).Result()
+				if err == nil && len(res) > 0 {
+					val := make(map[string][]string)
+					json.Unmarshal([]byte(res), &val)
+					for key, values := range val {
+						for _, value := range values {
+							w.Header().Add(key, value)
+						}
 					}
-				}
-				res, err := redis_client.Exists("body:" + cache_key).Result()
-				if err == nil {
-					if res > 0 {
-						res, err := redis_client.Get("body:" + cache_key).Result()
-						if err == nil {
-							w.Write([]byte(fillDynamicContent(res)))
-							return
+					res, err := redis_client.Exists("body:" + cache_key).Result()
+					if err == nil {
+						if res > 0 {
+							res, err := redis_client.Get("body:" + cache_key).Result()
+							if err == nil {
+								w.Write([]byte(fillDynamicContent(res)))
+								return
+							}
 						}
 					}
 				}
@@ -64,7 +82,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Proxy Request
-	proxy_r, err := http.NewRequest(r.Method, router[r.Host]+uri, r.Body)
+	proxy_r, err := http.NewRequest(r.Method, router_config["host"]+uri, r.Body)
 	if err != nil {
 		//todo log
 		fmt.Println(err)
@@ -93,9 +111,14 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Update Header Cache
-	header_str, err := json.Marshal(resp.Header)
-	if err == nil {
-		redis_client.Set("header:"+cache_key, string(header_str), 0)
+	if router_config["cache"] == "1" {
+		header_str, err := json.Marshal(resp.Header)
+		if err == nil {
+			ttl, err := time.ParseDuration(router_config["ttl"])
+			if err == nil {
+				redis_client.Set("header:"+cache_key, string(header_str), ttl)
+			}
+		}
 	}
 
 	//Transfer Body
@@ -110,15 +133,20 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fillDynamicContent(body_str)))
 
 	//Update Body Cache
-	redis_client.Set("body:"+cache_key, body_str, 0)
+	if router_config["cache"] == "1" {
+		ttl, err := time.ParseDuration(router_config["ttl"])
+                if err == nil {
+			redis_client.Set("body:"+cache_key, body_str, ttl)
+		}
+	}
 }
 
 func main() {
 	//pprof
 	//todo switch
-    	go func() {
-        	log.Println(http.ListenAndServe("localhost:6060", nil))
-    	}()
+	go func() {
+		log.Println(http.ListenAndServe("localhost:6060", nil))
+	}()
 
 	//Init Env
 	err := godotenv.Load()
@@ -136,7 +164,7 @@ func main() {
 	defer redis_client.Close()
 
 	//Router Config
-	router = make(map[string]string)
+	router = make(map[string](map[string](map[string](map[string]string))))
 	//todo more complex
 	router_config, err := ioutil.ReadFile("./router_config.json")
 	if err != nil {

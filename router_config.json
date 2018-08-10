@@ -1,3 +1,30 @@
 {
-	"localhost:8888": "http://localhost:9999"
+    "localhost:8888":{
+        "GET":{
+            "/":{
+                "host":"http://www.dodoca.com",
+                "ttl":"0",
+		"cache":"1"
+            },
+            "*":{
+                "host":"http://www.dodoca.com",
+                "ttl":"0",
+		"cache":"1"
+            }
+        }
+    },
+    "localhost":{
+        "GET":{
+            "/":{
+                "host":"http://www.dodoca.com",
+                "ttl":"0",
+		"cache":"1"
+            },
+            "*":{
+                "host":"http://www.dodoca.com",
+                "ttl":"0",
+		"cache":"1"
+            }
+        }
+    }
 }
