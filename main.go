@@ -18,9 +18,6 @@ import (
 //Router Config
 var router map[string]string
 
-//Cache Storage
-var redis_client *redis.Client
-
 //HTTP Handler
 type myHandler struct{}
 
@@ -32,6 +29,13 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Read Cache
+	redis_client := redis.NewClient(&redis.Options{
+		Addr:     "localhost:6379",
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
+	defer redis_client.Close()
+
 	cache_key := cacheKey(r.Method, router[r.Host]+uri, r.Body)
 	res, err := redis_client.Exists("header:" + cache_key).Result()
 	if err == nil {
@@ -119,14 +123,6 @@ func main() {
 		log.Fatal(err)
 	}
 	json.Unmarshal(router_config, &router)
-
-	//Init Cache
-	//todo config
-	redis_client = redis.NewClient(&redis.Options{
-		Addr:     "localhost:6379",
-		Password: "", // no password set
-		DB:       0,  // use default DB
-	})
 
 	//Start Proxy Server
 	s := &http.Server{
