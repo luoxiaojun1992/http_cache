@@ -40,7 +40,8 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Fetch Router Config
-	request_host := r.Header.Get("x-real-host")
+	//request_host := r.Header.Get("x-real-host")
+	request_host := "www.ddc.com"
 	router_config := make(map[string]string)
 	v, ok := router[request_host][r.Method][uri]
 	if !ok {
@@ -67,6 +68,9 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 					val := make(map[string][]string)
 					json.Unmarshal([]byte(res), &val)
 					for key, values := range val {
+						if strings.ToLower(key) == "content-encoding" {
+							continue
+						}
 						for _, value := range values {
 							w.Header().Add(key, value)
 						}
@@ -78,11 +82,19 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 							if err == nil {
 								w.Write([]byte(fillDynamicContent(res)))
 								return
+							} else {
+								fmt.Println(err)
 							}
 						}
+					} else {
+						fmt.Println(err)
 					}
+				} else {
+					fmt.Println(err)
 				}
 			}
+		} else {
+			fmt.Println(err)
 		}
 	}
 
