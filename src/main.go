@@ -60,34 +60,24 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	cache_key := ""
 	if router_config["cache"] == CACHE_ENABLED {
 		cache_key = cacheKey(r.Method, router_config["host"]+uri, r.Body)
-		res, err := redis_client.Exists("header:" + cache_key).Result()
+		res, err := redis_client.Get("header:" + cache_key).Result()
 		if err == nil {
-			if res > 0 {
-				res, err := redis_client.Get("header:" + cache_key).Result()
-				if err == nil && len(res) > 0 {
-					val := make(map[string][]string)
-					json.Unmarshal([]byte(res), &val)
-					for key, values := range val {
-						if strings.ToLower(key) == "content-encoding" {
-							continue
-						}
-						for _, value := range values {
-							w.Header().Add(key, value)
-						}
+			if len(res) > 0 {
+				val := make(map[string][]string)
+				json.Unmarshal([]byte(res), &val)
+				for key, values := range val {
+					if strings.ToLower(key) == "content-encoding" {
+						continue
 					}
-					res, err := redis_client.Exists("body:" + cache_key).Result()
-					if err == nil {
-						if res > 0 {
-							res, err := redis_client.Get("body:" + cache_key).Result()
-							if err == nil {
-								w.Write([]byte(fillDynamicContent(res)))
-								return
-							} else {
-								fmt.Println(err)
-							}
-						}
-					} else {
-						fmt.Println(err)
+					for _, value := range values {
+						w.Header().Add(key, value)
+					}
+				}
+				res, err := redis_client.Get("body:" + cache_key).Result()
+				if err == nil {
+					if len(res) > 0 {
+						w.Write([]byte(fillDynamicContent(res)))
+						return
 					}
 				} else {
 					fmt.Println(err)
@@ -152,7 +142,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	//Update Body Cache
 	if router_config["cache"] == CACHE_ENABLED {
 		ttl, err := time.ParseDuration(router_config["ttl"])
-                if err == nil {
+		if err == nil {
 			redis_client.Set("body:"+cache_key, body_str, ttl)
 		}
 	}
