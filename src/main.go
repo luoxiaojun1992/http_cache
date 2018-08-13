@@ -67,7 +67,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				json.Unmarshal([]byte(res), &val)
 				for key, values := range val {
 					if strings.ToLower(key) == "content-encoding" {
-						continue
+						//continue
 					}
 					for _, value := range values {
 						w.Header().Add(key, value)
@@ -79,12 +79,8 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 						w.Write([]byte(fillDynamicContent(res)))
 						return
 					}
-				} else {
-					fmt.Println(err)
 				}
 			}
-		} else {
-			fmt.Println(err)
 		}
 	}
 
