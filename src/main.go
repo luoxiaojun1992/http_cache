@@ -66,9 +66,6 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				val := make(map[string][]string)
 				json.Unmarshal([]byte(res), &val)
 				for key, values := range val {
-					if strings.ToLower(key) == "content-encoding" {
-						//continue
-					}
 					for _, value := range values {
 						w.Header().Add(key, value)
 					}
