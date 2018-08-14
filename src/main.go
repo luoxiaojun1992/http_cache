@@ -145,7 +145,6 @@ func main() {
 	//todo cache clean & hotfix
 
 	//pprof
-	//todo switch
 	if envInt("PPROF_SWITCH", 0) == 1 {
 		go func() {
 			log.Println(http.ListenAndServe(env("PPROF_HOST", "localhost")+":"+env("PPROF_PORT", "6060"), nil))
