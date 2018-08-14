@@ -1,8 +1,8 @@
 package main
 
 import (
+	"github.com/json-iterator/go"
 	"crypto/md5"
-	"encoding/json"
 	"fmt"
 	"github.com/go-redis/redis"
 	"github.com/joho/godotenv"
@@ -23,6 +23,8 @@ const (
 	CACHE_ENABLED = "1"
 )
 
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
+
 //Cache Storage
 var redis_client *redis.Client
 
@@ -40,8 +42,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Fetch Router Config
-	//request_host := r.Header.Get("x-real-host")
-	request_host := "www.ddc.com"
+	request_host := r.Header.Get("x-real-host")
 	router_config := make(map[string]string)
 	v, ok := router[request_host][r.Method][uri]
 	if !ok {
@@ -144,11 +145,15 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+	//todo cache clean & hotfix
+
 	//pprof
 	//todo switch
+	if envInt("PPROF_SWITCH", 0) == 1 {
 	go func() {
-		log.Println(http.ListenAndServe("localhost:6060", nil))
+		log.Println(http.ListenAndServe(env("PPROF_HOST", "localhost") + ":" + env("PPROF_PORT", "6060"), nil))
 	}()
+	}
 
 	//Init Env
 	err := godotenv.Load()
