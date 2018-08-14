@@ -81,6 +81,8 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
+	fmt.Println("Cache Miss")
+
 	//Proxy Request
 	proxy_r, err := http.NewRequest(r.Method, router_config["host"]+uri, r.Body)
 	if err != nil {
