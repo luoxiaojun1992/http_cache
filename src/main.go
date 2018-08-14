@@ -59,6 +59,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	cache_key := ""
 	if r.Method == "GET" && router_config["cache"] == CACHE_ENABLED {
 		cache_key = router_config["host"] + uri
+		//todo cache key prefix
 		result_arr, err := redis_client.MGet("header:"+cache_key, "body:"+cache_key).Result()
 		if err == nil {
 			if header_str, ok := result_arr[0].(string); ok {
