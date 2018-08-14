@@ -1,12 +1,10 @@
 package main
 
 import (
-	"github.com/json-iterator/go"
-	"crypto/md5"
 	"fmt"
 	"github.com/go-redis/redis"
 	"github.com/joho/godotenv"
-	"io"
+	"github.com/json-iterator/go"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -29,7 +27,7 @@ var json = jsoniter.ConfigCompatibleWithStandardLibrary
 var redis_client *redis.Client
 
 //Router Config
-var router map[string](map[string](map[string](map[string]string)))
+var router map[string](map[string](map[string]string))
 
 //HTTP Handler
 type myHandler struct{}
@@ -44,9 +42,9 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	//Fetch Router Config
 	request_host := r.Header.Get("x-real-host")
 	router_config := make(map[string]string)
-	v, ok := router[request_host][r.Method][uri]
+	v, ok := router[request_host][uri]
 	if !ok {
-		v, ok := router[request_host][r.Method]["*"]
+		v, ok := router[request_host]["*"]
 		if !ok {
 			w.Write([]byte{})
 			return
@@ -59,8 +57,8 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	//Read Cache
 	cache_key := ""
-	if router_config["cache"] == CACHE_ENABLED {
-		cache_key = cacheKey(r.Method, router_config["host"]+uri, r.Body)
+	if r.Method == "GET" && router_config["cache"] == CACHE_ENABLED {
+		cache_key = router_config["host"] + uri
 		res, err := redis_client.Get("header:" + cache_key).Result()
 		if err == nil {
 			if len(res) > 0 {
@@ -80,9 +78,8 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				}
 			}
 		}
+		fmt.Println("Cache Miss")
 	}
-
-	fmt.Println("Cache Miss")
 
 	//Proxy Request
 	proxy_r, err := http.NewRequest(r.Method, router_config["host"]+uri, r.Body)
@@ -114,7 +111,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Update Header Cache
-	if router_config["cache"] == CACHE_ENABLED {
+	if r.Method == "GET" && router_config["cache"] == CACHE_ENABLED {
 		header_str, err := json.Marshal(resp.Header)
 		if err == nil {
 			ttl, err := time.ParseDuration(router_config["ttl"])
@@ -136,7 +133,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fillDynamicContent(body_str)))
 
 	//Update Body Cache
-	if router_config["cache"] == CACHE_ENABLED {
+	if r.Method == "GET" && router_config["cache"] == CACHE_ENABLED {
 		ttl, err := time.ParseDuration(router_config["ttl"])
 		if err == nil {
 			redis_client.Set("body:"+cache_key, body_str, ttl)
@@ -150,9 +147,9 @@ func main() {
 	//pprof
 	//todo switch
 	if envInt("PPROF_SWITCH", 0) == 1 {
-	go func() {
-		log.Println(http.ListenAndServe(env("PPROF_HOST", "localhost") + ":" + env("PPROF_PORT", "6060"), nil))
-	}()
+		go func() {
+			log.Println(http.ListenAndServe(env("PPROF_HOST", "localhost")+":"+env("PPROF_PORT", "6060"), nil))
+		}()
 	}
 
 	//Init Env
@@ -171,7 +168,7 @@ func main() {
 	defer redis_client.Close()
 
 	//Router Config
-	router = make(map[string](map[string](map[string](map[string]string))))
+	router = make(map[string](map[string](map[string]string)))
 	router_config, err := ioutil.ReadFile("../router_config.json")
 	if err != nil {
 		log.Fatal(err)
@@ -189,23 +186,6 @@ func main() {
 		MaxHeaderBytes: 1 << 20,
 	}
 	log.Fatal(s.ListenAndServe())
-}
-
-func cacheKey(method string, url string, body io.ReadCloser) string {
-	body_str := ""
-	if body != nil {
-		body_byte, err := ioutil.ReadAll(body)
-		if err != nil {
-			//todo log
-			fmt.Println(err)
-			return ""
-		}
-		body_str = string(body_byte)
-	}
-
-	hmd5 := md5.New()
-	io.WriteString(hmd5, method+":"+url+":"+body_str)
-	return string(hmd5.Sum(nil))
 }
 
 func fillDynamicContent(body string) string {

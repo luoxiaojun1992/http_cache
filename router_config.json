@@ -1,6 +1,5 @@
 {
     "www.ddc.com":{
-        "GET":{
             "/":{
                 "host":"http://www.dodoca.com",
                 "ttl":"0",
@@ -11,10 +10,8 @@
                 "ttl":"0",
 		"cache":"1"
             }
-        }
     },
     "localhost":{
-        "GET":{
             "/":{
                 "host":"http://www.dodoca.com",
                 "ttl":"0",
@@ -25,6 +22,5 @@
                 "ttl":"0",
 		"cache":"1"
             }
-        }
     }
 }
