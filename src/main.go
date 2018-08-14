@@ -58,23 +58,23 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	//Read Cache
 	cache_key := ""
 	if r.Method == "GET" && router_config["cache"] == CACHE_ENABLED {
-		//todo optimizen mget
 		cache_key = router_config["host"] + uri
-		res, err := redis_client.Get("header:" + cache_key).Result()
+		result_arr, err := redis_client.MGet("header:"+cache_key, "body:"+cache_key).Result()
 		if err == nil {
-			if len(res) > 0 {
-				val := make(map[string][]string)
-				json.Unmarshal([]byte(res), &val)
-				for key, values := range val {
-					for _, value := range values {
-						w.Header().Add(key, value)
+			if header_str, ok := result_arr[0].(string); ok {
+				if len(header_str) > 0 {
+					val := make(map[string][]string)
+					json.Unmarshal([]byte(header_str), &val)
+					for key, values := range val {
+						for _, value := range values {
+							w.Header().Add(key, value)
+						}
 					}
-				}
-				res, err := redis_client.Get("body:" + cache_key).Result()
-				if err == nil {
-					if len(res) > 0 {
-						w.Write([]byte(fillDynamicContent(res)))
-						return
+					if body_str, ok := result_arr[1].(string); ok {
+						if len(body_str) > 0 {
+							w.Write([]byte(fillDynamicContent(body_str)))
+							return
+						}
 					}
 				}
 			}
