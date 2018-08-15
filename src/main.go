@@ -36,7 +36,7 @@ var router map[string](map[string](map[string]string))
 //HTTP Handler
 type myHandler struct{}
 
-func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {	
+func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	//Compose URI
 	uri := r.URL.RequestURI()
 	if len(r.URL.Fragment) > 0 {
@@ -67,12 +67,10 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if err == nil {
 			if header_str, ok := result_arr[0].(string); ok {
 				if len(header_str) > 0 {
-					val := make(map[string][]string)
-					json.Unmarshal([]byte(header_str), &val)
-					for key, values := range val {
-						for _, value := range values {
-							w.Header().Add(key, value)
-						}
+					headers := strings.Split(header_str, "\r\n\r\n")
+					for _, header := range headers {
+						header_pair := strings.Split(header, "\r\n")
+						w.Header().Add(header_pair[0], header_pair[1])
 					}
 					if body_str, ok := result_arr[1].(string); ok {
 						if len(body_str) > 0 {
@@ -117,12 +115,15 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	//Update Header Cache
 	if r.Method == "GET" && router_config["cache"] == CACHE_ENABLED {
-		header_str, err := json.Marshal(resp.Header)
-		if err == nil {
-			ttl, err := time.ParseDuration(router_config["ttl"])
-			if err == nil {
-				redis_client.Set("header:"+cache_key, string(header_str), ttl)
+		headers := []string{}
+		for key, values := range resp.Header {
+			for _, value := range values {
+				headers = append(headers, key+"\r\n"+value)
 			}
+		}
+		ttl, err := time.ParseDuration(router_config["ttl"])
+		if err == nil {
+			redis_client.Set("header:"+cache_key, strings.Join(headers, "\r\n\r\n"), ttl)
 		}
 	}
 
