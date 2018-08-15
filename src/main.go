@@ -36,7 +36,7 @@ var router map[string](map[string](map[string]string))
 //HTTP Handler
 type myHandler struct{}
 
-func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {	
 	//Compose URI
 	uri := r.URL.RequestURI()
 	if len(r.URL.Fragment) > 0 {
@@ -63,7 +63,6 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	cache_key := ""
 	if r.Method == "GET" && router_config["cache"] == CACHE_ENABLED {
 		cache_key = cache_prefix + router_config["host"] + uri
-		//todo cache key prefix
 		result_arr, err := redis_client.MGet("header:"+cache_key, "body:"+cache_key).Result()
 		if err == nil {
 			if header_str, ok := result_arr[0].(string); ok {
@@ -197,6 +196,10 @@ func main() {
 }
 
 func fillDynamicContent(body string) string {
+	if !strings.Contains(body, "<dynamic>") {
+		return body
+	}
+
 	re := regexp.MustCompile(`\<dynamic\>.+\</dynamic\>`)
 	dynamic_tags := re.FindAllString(body, -1)
 	if len(dynamic_tags) <= 0 {
