@@ -21,7 +21,11 @@ const (
 	CACHE_ENABLED = "1"
 )
 
+//ThirdParty Json Searilizer
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
+
+//Cache Prefix
+var cache_prefix string
 
 //Cache Storage
 var redis_client *redis.Client
@@ -58,7 +62,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	//Read Cache
 	cache_key := ""
 	if r.Method == "GET" && router_config["cache"] == CACHE_ENABLED {
-		cache_key = router_config["host"] + uri
+		cache_key = cache_prefix + router_config["host"] + uri
 		//todo cache key prefix
 		result_arr, err := redis_client.MGet("header:"+cache_key, "body:"+cache_key).Result()
 		if err == nil {
@@ -158,6 +162,9 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	//Init Cache Prefix
+	cache_prefix = env("CACHE_PREFIX", "")
 
 	//Init Cache
 	redis_client = redis.NewClient(&redis.Options{
