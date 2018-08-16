@@ -5,6 +5,7 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/joho/godotenv"
 	"github.com/json-iterator/go"
+	"github.com/patrickmn/go-cache"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -29,6 +30,7 @@ var cache_prefix string
 
 //Cache Storage
 var redis_client *redis.Client
+var local_cache *cache.Cache
 
 //Router Config
 var router map[string](map[string](map[string]string))
@@ -63,22 +65,33 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	cache_key := ""
 	if r.Method == "GET" && router_config["cache"] == CACHE_ENABLED {
 		cache_key = cache_prefix + router_config["host"] + uri
-		result_arr, err := redis_client.MGet("header:"+cache_key, "body:"+cache_key).Result()
-		if err == nil {
-			if header_str, ok := result_arr[0].(string); ok {
-				if len(header_str) > 0 {
-					headers := strings.Split(header_str, "\r\n\r\n")
-					for _, header := range headers {
-						header_pair := strings.Split(header, "\r\n")
-						w.Header().Add(header_pair[0], header_pair[1])
-					}
-					if body_str, ok := result_arr[1].(string); ok {
-						if len(body_str) > 0 {
-							w.Write([]byte(fillDynamicContent(body_str)))
-							return
+		header_str := getCache("header:" + cache_key)
+		body_str := getCache("body:" + cache_key)
+		if len(header_str) <= 0 || len(body_str) <= 0 {
+			result_arr, err := redis_client.MGet("header:"+cache_key, "body:"+cache_key).Result()
+			if err == nil {
+				if value, ok := result_arr[0].(string); ok {
+					header_str = value
+					if len(header_str) > 0 {
+						if value, ok := result_arr[1].(string); ok {
+							body_str = value
+							setCache("header:"+cache_key, header_str, 1*time.Second)
+							setCache("body:"+cache_key, body_str, 1*time.Second)
 						}
 					}
 				}
+			}
+		}
+
+		if len(header_str) > 0 {
+			headers := strings.Split(header_str, "\r\n\r\n")
+			for _, header := range headers {
+				header_pair := strings.Split(header, "\r\n")
+				w.Header().Add(header_pair[0], header_pair[1])
+			}
+			if len(body_str) > 0 {
+				w.Write([]byte(fillDynamicContent(body_str)))
+				return
 			}
 		}
 		fmt.Println("Cache Miss")
@@ -123,7 +136,9 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		ttl, err := time.ParseDuration(router_config["ttl"])
 		if err == nil {
-			redis_client.Set("header:"+cache_key, strings.Join(headers, "\r\n\r\n"), ttl)
+			header_str := strings.Join(headers, "\r\n\r\n")
+			redis_client.Set("header:"+cache_key, header_str, ttl)
+			setCache("header:"+cache_key, header_str, 1*time.Second)
 		}
 	}
 
@@ -143,6 +158,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		ttl, err := time.ParseDuration(router_config["ttl"])
 		if err == nil {
 			redis_client.Set("body:"+cache_key, body_str, ttl)
+			setCache("body:"+cache_key, body_str, 1*time.Second)
 		}
 	}
 }
@@ -162,7 +178,7 @@ func main() {
 			log.Println(http.ListenAndServe(env("PPROF_HOST", "localhost")+":"+env("PPROF_PORT", "6060"), nil))
 		}()
 	}
-	
+
 	//Init Cache Prefix
 	cache_prefix = env("CACHE_PREFIX", "")
 
@@ -174,6 +190,8 @@ func main() {
 		PoolSize: envInt("REDIS_POOL_SIZE", 200),
 	})
 	defer redis_client.Close()
+
+	local_cache = cache.New(1*time.Second, 10*time.Minute)
 
 	//Router Config
 	router = make(map[string](map[string](map[string]string)))
@@ -267,4 +285,16 @@ func envInt(key string, default_value int) int {
 	}
 
 	return default_value
+}
+
+func setCache(key, value string, ttl time.Duration) {
+	local_cache.Add(key, value, ttl)
+}
+
+func getCache(key string) string {
+	if x, found := local_cache.Get(key); found {
+		return x.(string)
+	}
+
+	return ""
 }
