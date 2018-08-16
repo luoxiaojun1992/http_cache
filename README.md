@@ -7,4 +7,4 @@ Http Cache System Written in Go
 * Go 1.10.3
 * Redis 4.0.11
 
-![Load Test](./load_test.jpeg)
+![Load Test](./load_test.jpg)

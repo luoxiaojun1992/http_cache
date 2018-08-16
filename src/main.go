@@ -150,19 +150,19 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 func main() {
 	//todo cache clean & hotfix
 
-	//pprof
-	if envInt("PPROF_SWITCH", 0) == 1 {
-		go func() {
-			log.Println(http.ListenAndServe(env("PPROF_HOST", "localhost")+":"+env("PPROF_PORT", "6060"), nil))
-		}()
-	}
-
 	//Init Env
 	err := godotenv.Load()
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	//pprof
+	if envInt("PPROF_SWITCH", 0) == 1 {
+		go func() {
+			log.Println(http.ListenAndServe(env("PPROF_HOST", "localhost")+":"+env("PPROF_PORT", "6060"), nil))
+		}()
+	}
+	
 	//Init Cache Prefix
 	cache_prefix = env("CACHE_PREFIX", "")
 
