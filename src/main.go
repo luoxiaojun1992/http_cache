@@ -165,6 +165,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func main() {
 	//todo cache clean & hotfix
+	//todo monitor http handler
 
 	//Init Env
 	err := godotenv.Load()
