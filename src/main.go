@@ -25,6 +25,9 @@ const (
 //ThirdParty Json Searilizer
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
+//Local Cache Switch
+var local_cache_switch int
+
 //Cache Prefix
 var cache_prefix string
 
@@ -192,6 +195,8 @@ func main() {
 	})
 	defer redis_client.Close()
 
+	//Init Local Cache
+	local_cache_switch = envInt("LOCAL_CACHE_SWITCH", 0)
 	local_cache = cache.New(1*time.Second, 10*time.Minute)
 
 	//Router Config
@@ -289,10 +294,18 @@ func envInt(key string, default_value int) int {
 }
 
 func setCache(key, value string, ttl time.Duration) {
+	if local_cache_switch == 0 {
+		return
+	}
+
 	local_cache.Add(key, value, ttl)
 }
 
 func getCache(key string) string {
+	if local_cache_switch == 0 {
+		return ""
+	}
+
 	if x, found := local_cache.Get(key); found {
 		return x.(string)
 	}
