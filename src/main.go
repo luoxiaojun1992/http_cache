@@ -3,17 +3,14 @@ package main
 import (
 	"fmt"
 	"github.com/go-redis/redis"
-	"github.com/joho/godotenv"
-	"github.com/json-iterator/go"
+	. "github.com/luoxiaojun1992/http_cache/src/environment"
 	"github.com/luoxiaojun1992/http_cache/src/router"
 	"github.com/patrickmn/go-cache"
 	"io/ioutil"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
-	"os"
 	"regexp"
-	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -22,9 +19,6 @@ import (
 const (
 	CACHE_ENABLED = "1"
 )
-
-//ThirdParty Json Searilizer
-var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 //Local Cache Switch
 var local_cache_switch int
@@ -161,40 +155,37 @@ func main() {
 	//todo monitor http handler
 
 	//Init Env
-	err := godotenv.Load()
-	if err != nil {
-		log.Fatal(err)
-	}
+	InitEnv()
 
 	//pprof
-	if envInt("PPROF_SWITCH", 0) == 1 {
+	if EnvInt("PPROF_SWITCH", 0) == 1 {
 		go func() {
-			log.Println(http.ListenAndServe(env("PPROF_HOST", "localhost")+":"+env("PPROF_PORT", "6060"), nil))
+			log.Println(http.ListenAndServe(Env("PPROF_HOST", "localhost")+":"+Env("PPROF_PORT", "6060"), nil))
 		}()
 	}
 
 	//Init Cache Prefix
-	cache_prefix = env("CACHE_PREFIX", "")
+	cache_prefix = Env("CACHE_PREFIX", "")
 
 	//Init Cache
 	redis_client = redis.NewClient(&redis.Options{
-		Addr:     env("REDIS_HOST", "localhost") + ":" + env("REDIS_PORT", "6379"),
-		Password: env("REDIS_PASSWORD", ""), // no password set
-		DB:       envInt("REDIS_DB", 0),     // use default DB
-		PoolSize: envInt("REDIS_POOL_SIZE", 200),
+		Addr:     Env("REDIS_HOST", "localhost") + ":" + Env("REDIS_PORT", "6379"),
+		Password: Env("REDIS_PASSWORD", ""), // no password set
+		DB:       EnvInt("REDIS_DB", 0),     // use default DB
+		PoolSize: EnvInt("REDIS_POOL_SIZE", 200),
 	})
 	defer redis_client.Close()
 
 	//Init Local Cache
-	local_cache_switch = envInt("LOCAL_CACHE_SWITCH", 0)
+	local_cache_switch = EnvInt("LOCAL_CACHE_SWITCH", 0)
 	local_cache = cache.New(1*time.Second, 10*time.Minute)
 
 	//Init Router Config
-	router.InitConfig(env("ROUTER_CONFIG_FILE_PATH", "../router_config.json"))
+	router.InitConfig(Env("ROUTER_CONFIG_FILE_PATH", "../router_config.json"))
 
 	//Start Proxy Server
 	s := &http.Server{
-		Addr:           env("HTTP_HOST", "0.0.0.0") + ":" + env("HTTP_PORT", "8888"),
+		Addr:           Env("HTTP_HOST", "0.0.0.0") + ":" + Env("HTTP_PORT", "8888"),
 		Handler:        &myHandler{},
 		ReadTimeout:    10 * time.Second,
 		WriteTimeout:   10 * time.Second,
@@ -252,28 +243,6 @@ func fillDynamicContent(body string) string {
 	wg.Wait()
 
 	return body
-}
-
-func env(key, default_value string) string {
-	val := os.Getenv(key)
-
-	if len(val) > 0 {
-		return val
-	}
-
-	return default_value
-}
-
-func envInt(key string, default_value int) int {
-	val := env(key, "")
-	if len(val) > 0 {
-		i, err := strconv.Atoi(val)
-		if err == nil {
-			return i
-		}
-	}
-
-	return default_value
 }
 
 func setCache(key, value string, ttl time.Duration) {

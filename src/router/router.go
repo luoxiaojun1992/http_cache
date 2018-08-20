@@ -1,17 +1,19 @@
 package router
 
 import (
-	"encoding/json"
 	"errors"
+	"github.com/json-iterator/go"
 	"io/ioutil"
 	"log"
 )
+
+//ThirdParty Json Searilizer
+var json = jsoniter.ConfigCompatibleWithStandardLibrary
 
 //Router Config
 var router map[string](map[string](map[string]string))
 
 func InitConfig(config_file_path string) {
-	//todo router_config path config
 	router = make(map[string](map[string](map[string]string)))
 	router_config, err := ioutil.ReadFile(config_file_path)
 	if err != nil {
