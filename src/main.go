@@ -5,6 +5,7 @@ import (
 	"github.com/go-redis/redis"
 	"github.com/joho/godotenv"
 	"github.com/json-iterator/go"
+	"github.com/luoxiaojun1992/http_cache/src/router"
 	"github.com/patrickmn/go-cache"
 	"io/ioutil"
 	"log"
@@ -35,9 +36,6 @@ var cache_prefix string
 var redis_client *redis.Client
 var local_cache *cache.Cache
 
-//Router Config
-var router map[string](map[string](map[string]string))
-
 //HTTP Handler
 type myHandler struct{}
 
@@ -49,19 +47,11 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Fetch Router Config
-	request_host := r.Header.Get("x-real-host")
-	router_config := make(map[string]string)
-	v, ok := router[request_host][uri]
-	if !ok {
-		v, ok := router[request_host]["*"]
-		if !ok {
-			w.Write([]byte{})
-			return
-		} else {
-			router_config = v
-		}
-	} else {
-		router_config = v
+	request_host := r.Header.Get("x-request-host")
+	router_config, err := router.FetchConfig(request_host, uri)
+	if err != nil {
+		w.Write([]byte{})
+		return
 	}
 
 	//Read Cache
@@ -199,15 +189,8 @@ func main() {
 	local_cache_switch = envInt("LOCAL_CACHE_SWITCH", 0)
 	local_cache = cache.New(1*time.Second, 10*time.Minute)
 
-	//Router Config
-	router = make(map[string](map[string](map[string]string)))
-	router_config, err := ioutil.ReadFile("../router_config.json")
-	if err != nil {
-		log.Fatal(err)
-	}
-	if len(router_config) > 0 {
-		json.Unmarshal(router_config, &router)
-	}
+	//Init Router Config
+	router.InitConfig(env("ROUTER_CONFIG_FILE_PATH", "../router_config.json"))
 
 	//Start Proxy Server
 	s := &http.Server{
