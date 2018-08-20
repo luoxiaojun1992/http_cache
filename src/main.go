@@ -2,10 +2,9 @@ package main
 
 import (
 	"fmt"
-	"github.com/go-redis/redis"
+	"github.com/luoxiaojun1992/http_cache/src/cache"
 	. "github.com/luoxiaojun1992/http_cache/src/environment"
 	"github.com/luoxiaojun1992/http_cache/src/router"
-	"github.com/patrickmn/go-cache"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -15,20 +14,6 @@ import (
 	"sync"
 	"time"
 )
-
-const (
-	CACHE_ENABLED = "1"
-)
-
-//Local Cache Switch
-var local_cache_switch int
-
-//Cache Prefix
-var cache_prefix string
-
-//Cache Storage
-var redis_client *redis.Client
-var local_cache *cache.Cache
 
 //HTTP Handler
 type myHandler struct{}
@@ -50,25 +35,11 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	//Read Cache
 	cache_key := ""
-	if r.Method == "GET" && router_config["cache"] == CACHE_ENABLED {
-		cache_key = cache_prefix + router_config["host"] + uri
-		header_str := getCache("header:" + cache_key)
-		body_str := getCache("body:" + cache_key)
-		if len(header_str) <= 0 || len(body_str) <= 0 {
-			result_arr, err := redis_client.MGet("header:"+cache_key, "body:"+cache_key).Result()
-			if err == nil {
-				if value, ok := result_arr[0].(string); ok {
-					header_str = value
-					if len(header_str) > 0 {
-						if value, ok := result_arr[1].(string); ok {
-							body_str = value
-							setCache("header:"+cache_key, header_str, 1*time.Second)
-							setCache("body:"+cache_key, body_str, 1*time.Second)
-						}
-					}
-				}
-			}
-		}
+	if r.Method == "GET" && router_config["cache"] == cache.CACHE_ENABLED {
+		cache_key = router_config["host"] + uri
+		multi_cache := cache.MGetCache([]string{"header:" + cache_key, "body:" + cache_key})
+		header_str := multi_cache[0]
+		body_str := multi_cache[1]
 
 		if len(header_str) > 0 {
 			headers := strings.Split(header_str, "\r\n\r\n")
@@ -114,7 +85,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Update Header Cache
-	if r.Method == "GET" && router_config["cache"] == CACHE_ENABLED {
+	if r.Method == "GET" && router_config["cache"] == cache.CACHE_ENABLED {
 		headers := []string{}
 		for key, values := range resp.Header {
 			for _, value := range values {
@@ -124,8 +95,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		ttl, err := time.ParseDuration(router_config["ttl"])
 		if err == nil {
 			header_str := strings.Join(headers, "\r\n\r\n")
-			redis_client.Set("header:"+cache_key, header_str, ttl)
-			setCache("header:"+cache_key, header_str, 1*time.Second)
+			cache.SetCache("header:"+cache_key, header_str, ttl)
 		}
 	}
 
@@ -141,11 +111,10 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(fillDynamicContent(body_str)))
 
 	//Update Body Cache
-	if r.Method == "GET" && router_config["cache"] == CACHE_ENABLED {
+	if r.Method == "GET" && router_config["cache"] == cache.CACHE_ENABLED {
 		ttl, err := time.ParseDuration(router_config["ttl"])
 		if err == nil {
-			redis_client.Set("body:"+cache_key, body_str, ttl)
-			setCache("body:"+cache_key, body_str, 1*time.Second)
+			cache.SetCache("body:"+cache_key, body_str, ttl)
 		}
 	}
 }
@@ -164,21 +133,9 @@ func main() {
 		}()
 	}
 
-	//Init Cache Prefix
-	cache_prefix = Env("CACHE_PREFIX", "")
-
 	//Init Cache
-	redis_client = redis.NewClient(&redis.Options{
-		Addr:     Env("REDIS_HOST", "localhost") + ":" + Env("REDIS_PORT", "6379"),
-		Password: Env("REDIS_PASSWORD", ""), // no password set
-		DB:       EnvInt("REDIS_DB", 0),     // use default DB
-		PoolSize: EnvInt("REDIS_POOL_SIZE", 200),
-	})
-	defer redis_client.Close()
-
-	//Init Local Cache
-	local_cache_switch = EnvInt("LOCAL_CACHE_SWITCH", 0)
-	local_cache = cache.New(1*time.Second, 10*time.Minute)
+	cache.NewCache()
+	defer cache.Close()
 
 	//Init Router Config
 	router.InitConfig(Env("ROUTER_CONFIG_FILE_PATH", "../router_config.json"))
@@ -243,24 +200,4 @@ func fillDynamicContent(body string) string {
 	wg.Wait()
 
 	return body
-}
-
-func setCache(key, value string, ttl time.Duration) {
-	if local_cache_switch == 0 {
-		return
-	}
-
-	local_cache.Add(key, value, ttl)
-}
-
-func getCache(key string) string {
-	if local_cache_switch == 0 {
-		return ""
-	}
-
-	if x, found := local_cache.Get(key); found {
-		return x.(string)
-	}
-
-	return ""
 }
