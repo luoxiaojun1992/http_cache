@@ -4,6 +4,7 @@ import (
 	"github.com/luoxiaojun1992/http_cache/src/cache"
 	. "github.com/luoxiaojun1992/http_cache/src/environment"
 	"github.com/luoxiaojun1992/http_cache/src/filter"
+	"github.com/luoxiaojun1992/http_cache/src/logger"
 	"github.com/luoxiaojun1992/http_cache/src/router"
 	"github.com/luoxiaojun1992/http_cache/src/server"
 	"log"
@@ -34,6 +35,9 @@ func main() {
 
 	//Init Filters
 	filter.InitFilter()
+
+	//Init Logger
+	logger.InitLogger()
 
 	//Start Proxy Server
 	server.StartHttp()
