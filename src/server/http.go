@@ -24,7 +24,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Fetch Router Config
-	request_host := r.Header.Get("x-request-host")
+	request_host := r.Host
 	router_config, err := router.FetchConfig(request_host, uri)
 	if err != nil {
 		w.Write([]byte{})
