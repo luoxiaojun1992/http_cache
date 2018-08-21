@@ -3,6 +3,7 @@ package router
 import (
 	"errors"
 	"github.com/json-iterator/go"
+	. "github.com/luoxiaojun1992/http_cache/src/environment"
 	"io/ioutil"
 	"log"
 )
@@ -13,9 +14,9 @@ var json = jsoniter.ConfigCompatibleWithStandardLibrary
 //Router Config
 var router map[string](map[string](map[string]string))
 
-func InitConfig(config_file_path string) {
+func InitConfig() {
 	router = make(map[string](map[string](map[string]string)))
-	router_config, err := ioutil.ReadFile(config_file_path)
+	router_config, err := ioutil.ReadFile(Env("ROUTER_CONFIG_FILE_PATH", "../router_config.json"))
 	if err != nil {
 		log.Fatal(err)
 	}

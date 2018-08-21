@@ -137,7 +137,7 @@ func main() {
 	defer cache.Close()
 
 	//Init Router Config
-	router.InitConfig(Env("ROUTER_CONFIG_FILE_PATH", "../router_config.json"))
+	router.InitConfig()
 
 	//Init Filters
 	filter.InitFilter()
