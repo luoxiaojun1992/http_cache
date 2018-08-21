@@ -21,7 +21,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	//Compose URI
 	uri := r.URL.RequestURI()
 	if len(r.URL.Fragment) > 0 {
-		uri += ('#' + r.URL.Fragment)
+		uri += ("#" + r.URL.Fragment)
 	}
 
 	//Fetch Router Config
