@@ -8,10 +8,10 @@ import (
 	"sync"
 )
 
-type DynamicContent struct {
+type dynamic_content struct {
 }
 
-func (dc *DynamicContent) Handle(body string) string {
+func (dc *dynamic_content) handle(body string) string {
 	if !strings.Contains(body, "<dynamic>") {
 		return body
 	}

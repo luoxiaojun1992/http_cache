@@ -14,9 +14,6 @@ import (
 	"time"
 )
 
-//Filters
-var filters []filter.Filter
-
 //HTTP Handler
 type myHandler struct{}
 
@@ -50,7 +47,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				w.Header().Add(header_pair[0], header_pair[1])
 			}
 			if len(body_str) > 0 {
-				w.Write([]byte(doFilter(body_str)))
+				w.Write([]byte(filter.Do(body_str)))
 				return
 			}
 		}
@@ -110,7 +107,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	body_str := string(body)
-	w.Write([]byte(doFilter(body_str)))
+	w.Write([]byte(filter.Do(body_str)))
 
 	//Update Body Cache
 	if r.Method == "GET" && router_config["cache"] == cache.CACHE_ENABLED {
@@ -143,7 +140,7 @@ func main() {
 	router.InitConfig(Env("ROUTER_CONFIG_FILE_PATH", "../router_config.json"))
 
 	//Init Filters
-	filters = append(filters, &filter.DynamicContent{})
+	filter.InitFilter()
 
 	//Start Proxy Server
 	s := &http.Server{
@@ -154,12 +151,4 @@ func main() {
 		MaxHeaderBytes: 1 << 20,
 	}
 	log.Fatal(s.ListenAndServe())
-}
-
-func doFilter(body string) string {
-	for _, filter_concrete := range filters {
-		body = filter_concrete.Handle(body)
-	}
-
-	return body
 }
