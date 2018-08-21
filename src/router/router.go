@@ -16,7 +16,7 @@ var router map[string](map[string](map[string]string))
 
 func InitConfig() {
 	router = make(map[string](map[string](map[string]string)))
-	router_config, err := ioutil.ReadFile(Env("ROUTER_CONFIG_FILE_PATH", "../router_config.json"))
+	router_config, err := ioutil.ReadFile(Env("ROUTER_CONFIG_FILE_PATH", "../etc/router_config.json"))
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -1,5 +1,5 @@
 {
-    "localhost":{
+    "localhost:8888":{
             "/":{
                 "host":"http://www.example.com",
                 "ttl":"0",
@@ -8,7 +8,7 @@
             "*":{
                 "host":"http://www.example.com",
                 "ttl":"0",
-		"cache":"0"
+		"cache":"1"
             }
     }
 }
