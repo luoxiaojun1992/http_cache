@@ -1,26 +1,14 @@
 {
-    "www.ddc.com":{
-            "/":{
-                "host":"http://www.dodoca.com",
-                "ttl":"0",
-		"cache":"1"
-            },
-            "*":{
-                "host":"http://www.dodoca.com",
-                "ttl":"0",
-		"cache":"1"
-            }
-    },
     "localhost":{
             "/":{
-                "host":"http://www.dodoca.com",
+                "host":"http://www.example.com",
                 "ttl":"0",
 		"cache":"1"
             },
             "*":{
-                "host":"http://www.dodoca.com",
+                "host":"http://www.example.com",
                 "ttl":"0",
-		"cache":"1"
+		"cache":"0"
             }
     }
 }

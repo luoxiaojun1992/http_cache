@@ -10,6 +10,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -38,7 +39,6 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		multi_cache := cache.MGetCache([]string{"header:" + cache_key, "body:" + cache_key})
 		header_str := multi_cache[0]
 		body_str := multi_cache[1]
-
 		if len(header_str) > 0 {
 			headers := util.DeSerialize(header_str)
 			for key, value := range headers {
@@ -61,6 +61,10 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	proxy_r.Header = r.Header
+	url_obj, err := url.Parse(router_config["host"])
+	if err == nil {
+		proxy_r.Header.Add("Host", url_obj.Host)
+	}
 	for _, cookie := range r.Cookies() {
 		proxy_r.AddCookie(cookie)
 	}
