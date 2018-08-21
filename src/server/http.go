@@ -1,11 +1,13 @@
 package server
 
 import (
+	"errors"
 	"fmt"
 	"github.com/luoxiaojun1992/http_cache/src/cache"
 	. "github.com/luoxiaojun1992/http_cache/src/environment"
 	"github.com/luoxiaojun1992/http_cache/src/filter"
 	"github.com/luoxiaojun1992/http_cache/src/foundation/util"
+	"github.com/luoxiaojun1992/http_cache/src/logger"
 	"github.com/luoxiaojun1992/http_cache/src/router"
 	"io/ioutil"
 	"log"
@@ -48,7 +50,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		fmt.Println("Cache Miss")
+		logger.Do(errors.New("Cache Miss"))
 	}
 
 	//Proxy Request
