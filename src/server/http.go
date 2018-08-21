@@ -5,11 +5,11 @@ import (
 	"github.com/luoxiaojun1992/http_cache/src/cache"
 	. "github.com/luoxiaojun1992/http_cache/src/environment"
 	"github.com/luoxiaojun1992/http_cache/src/filter"
+	"github.com/luoxiaojun1992/http_cache/src/foundation/util"
 	"github.com/luoxiaojun1992/http_cache/src/router"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"strings"
 	"time"
 )
 
@@ -40,10 +40,9 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		body_str := multi_cache[1]
 
 		if len(header_str) > 0 {
-			headers := strings.Split(header_str, "\r\n\r\n")
-			for _, header := range headers {
-				header_pair := strings.Split(header, "\r\n")
-				w.Header().Add(header_pair[0], header_pair[1])
+			headers := util.DeSerialize(header_str)
+			for key, value := range headers {
+				w.Header().Add(key, value)
 			}
 			if len(body_str) > 0 {
 				w.Write([]byte(filter.Do(body_str)))
@@ -84,16 +83,9 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	//Update Header Cache
 	if r.Method == "GET" && router_config["cache"] == cache.CACHE_ENABLED {
-		headers := []string{}
-		for key, values := range resp.Header {
-			for _, value := range values {
-				headers = append(headers, key+"\r\n"+value)
-			}
-		}
 		ttl, err := time.ParseDuration(router_config["ttl"])
 		if err == nil {
-			header_str := strings.Join(headers, "\r\n\r\n")
-			cache.SetCache("header:"+cache_key, header_str, ttl)
+			cache.SetCache("header:"+cache_key, util.Serialize(resp.Header), ttl)
 		}
 	}
 
