@@ -1,4 +1,4 @@
-package filter
+package filter_concrete
 
 import (
 	"io/ioutil"
@@ -8,10 +8,10 @@ import (
 	"sync"
 )
 
-type dynamic_content struct {
+type DynamicContent struct {
 }
 
-func (dc *dynamic_content) handle(body string) string {
+func (dc *DynamicContent) Handle(body string) string {
 	if !strings.Contains(body, "<dynamic>") {
 		return body
 	}
