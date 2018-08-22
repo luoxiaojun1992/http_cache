@@ -4,17 +4,17 @@ import (
 	. "github.com/luoxiaojun1992/http_cache/src/foundation/logger/concrete"
 )
 
-var loggers []logger_proto
+var loggers []loggerProto
 
 func InitLogger() {
-	loggers = []logger_proto{&Sentry{}}
-	for _, logger_concrete := range loggers {
-		logger_concrete.Preload()
+	loggers = []loggerProto{&Sentry{}}
+	for _, loggerConcrete := range loggers {
+		loggerConcrete.Preload()
 	}
 }
 
 func Do(err error) {
-	for _, logger_concrete := range loggers {
-		logger_concrete.Handle(err)
+	for _, loggerConcrete := range loggers {
+		loggerConcrete.Handle(err)
 	}
 }

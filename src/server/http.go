@@ -35,7 +35,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	//Read Cache
 	cache_key := ""
-	if r.Method == "GET" && router_config["cache"] == cache.CACHE_ENABLED {
+	if r.Method == "GET" && router_config["cache"] == cache.ENABLED {
 		cache_key = router_config["host"] + uri
 		multi_cache := cache.MGetCache([]string{"header:" + cache_key, "body:" + cache_key})
 		header_str := multi_cache[0]
@@ -87,7 +87,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Update Header Cache
-	if r.Method == "GET" && router_config["cache"] == cache.CACHE_ENABLED {
+	if r.Method == "GET" && router_config["cache"] == cache.ENABLED {
 		ttl, err := time.ParseDuration(router_config["ttl"])
 		if err == nil {
 			cache.SetCache("header:"+cache_key, util.Serialize(resp.Header), ttl)
@@ -106,7 +106,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(filter.Do(body_str)))
 
 	//Update Body Cache
-	if r.Method == "GET" && router_config["cache"] == cache.CACHE_ENABLED {
+	if r.Method == "GET" && router_config["cache"] == cache.ENABLED {
 		ttl, err := time.ParseDuration(router_config["ttl"])
 		if err == nil {
 			cache.SetCache("body:"+cache_key, body_str, ttl)

@@ -1,5 +1,5 @@
 package filter
 
-type filter_proto interface {
+type filterProto interface {
 	Handle(body string) string
 }

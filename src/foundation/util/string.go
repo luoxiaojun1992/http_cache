@@ -4,9 +4,9 @@ import (
 	"strings"
 )
 
-func Serialize(map_data map[string][]string) string {
-	lines := []string{}
-	for key, values := range map_data {
+func Serialize(mapData map[string][]string) string {
+	var lines []string
+	for key, values := range mapData {
 		for _, value := range values {
 			lines = append(lines, key+"\r\n"+value)
 		}
@@ -15,11 +15,11 @@ func Serialize(map_data map[string][]string) string {
 }
 
 func DeSerialize(data string) map[string]string {
-	map_data := make(map[string]string)
+	mapData := make(map[string]string)
 	lines := strings.Split(data, "\r\n\r\n")
 	for _, line := range lines {
 		pair := strings.Split(line, "\r\n")
-		map_data[pair[0]] = pair[1]
+		mapData[pair[0]] = pair[1]
 	}
-	return map_data
+	return mapData
 }

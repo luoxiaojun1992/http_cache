@@ -17,41 +17,41 @@ func (dc *DynamicContent) Handle(body string) string {
 	}
 
 	re := regexp.MustCompile(`\<dynamic\>.+\</dynamic\>`)
-	dynamic_tags := re.FindAllString(body, -1)
-	if len(dynamic_tags) <= 0 {
+	dynamicTags := re.FindAllString(body, -1)
+	if len(dynamicTags) <= 0 {
 		return body
 	}
 
-	dynamic_contents := make(map[string]string)
+	dynamicContents := make(map[string]string)
 	var wg sync.WaitGroup
-	var mutex_lock sync.Mutex
-	for i, dynamic_tag := range dynamic_tags {
+	var mutexLock sync.Mutex
+	for i, dynamicTag := range dynamicTags {
 		if i >= 10 {
 			break
 		}
 		go func() {
 			defer wg.Done()
 
-			dynamic_url := strings.Replace(dynamic_tag, "<dynamic>", "", 1)
-			dynamic_url = strings.Replace(dynamic_url, "</dynamic>", "", 1)
-			if val, ok := dynamic_contents[dynamic_url]; ok {
-				mutex_lock.Lock()
-				body = strings.Replace(body, dynamic_tag, val, 1)
-				mutex_lock.Unlock()
+			dynamicUrl := strings.Replace(dynamicTag, "<dynamic>", "", 1)
+			dynamicUrl = strings.Replace(dynamicUrl, "</dynamic>", "", 1)
+			if val, ok := dynamicContents[dynamicUrl]; ok {
+				mutexLock.Lock()
+				body = strings.Replace(body, dynamicTag, val, 1)
+				mutexLock.Unlock()
 				return
 			}
 
-			resp, err := http.Get(dynamic_url)
+			resp, err := http.Get(dynamicUrl)
 			if err == nil {
 				defer resp.Body.Close()
 
-				dynamic_content, err := ioutil.ReadAll(resp.Body)
+				dynamicContent, err := ioutil.ReadAll(resp.Body)
 				if err == nil {
-					dynamic_content_str := string(dynamic_content)
-					dynamic_contents[dynamic_url] = dynamic_content_str
-					mutex_lock.Lock()
-					body = strings.Replace(body, dynamic_tag, dynamic_content_str, 1)
-					mutex_lock.Unlock()
+					dynamicContentStr := string(dynamicContent)
+					dynamicContents[dynamicUrl] = dynamicContentStr
+					mutexLock.Lock()
+					body = strings.Replace(body, dynamicTag, dynamicContentStr, 1)
+					mutexLock.Unlock()
 				}
 			}
 		}()

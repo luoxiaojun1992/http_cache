@@ -14,17 +14,17 @@ func InitEnv() {
 	}
 }
 
-func Env(key, default_value string) string {
+func Env(key, defaultValue string) string {
 	val := os.Getenv(key)
 
 	if len(val) > 0 {
 		return val
 	}
 
-	return default_value
+	return defaultValue
 }
 
-func EnvInt(key string, default_value int) int {
+func EnvInt(key string, defaultValue int) int {
 	val := Env(key, "")
 	if len(val) > 0 {
 		i, err := strconv.Atoi(val)
@@ -33,5 +33,5 @@ func EnvInt(key string, default_value int) int {
 		}
 	}
 
-	return default_value
+	return defaultValue
 }

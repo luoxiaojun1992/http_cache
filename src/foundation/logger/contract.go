@@ -1,6 +1,6 @@
 package logger
 
-type logger_proto interface {
+type loggerProto interface {
 	Preload()
 	Handle(err error)
 }

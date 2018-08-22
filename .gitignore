@@ -14,3 +14,6 @@
 vendor
 vendor/*
 .env
+
+.idea
+.idea/*
