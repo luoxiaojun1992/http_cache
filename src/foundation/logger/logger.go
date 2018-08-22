@@ -1,16 +1,20 @@
 package logger
 
+import (
+	. "github.com/luoxiaojun1992/http_cache/src/foundation/logger/concrete"
+)
+
 var loggers []logger_proto
 
 func InitLogger() {
-	loggers = append(loggers, &sentry{})
+	loggers = []logger_proto{&Sentry{}}
 	for _, logger_concrete := range loggers {
-		logger_concrete.preload()
+		logger_concrete.Preload()
 	}
 }
 
 func Do(err error) {
 	for _, logger_concrete := range loggers {
-		logger_concrete.handle(err)
+		logger_concrete.Handle(err)
 	}
 }

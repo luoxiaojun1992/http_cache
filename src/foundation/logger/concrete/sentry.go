@@ -1,17 +1,17 @@
-package logger
+package logger_concrete
 
 import (
 	"github.com/getsentry/raven-go"
 	. "github.com/luoxiaojun1992/http_cache/src/foundation/environment"
 )
 
-type sentry struct {
+type Sentry struct {
 }
 
-func (s *sentry) preload() {
+func (s *Sentry) Preload() {
 	raven.SetDSN(Env("SENTRY_DSN", ""))
 }
 
-func (s *sentry) handle(err error) {
+func (s *Sentry) Handle(err error) {
 	raven.CaptureError(err, nil)
 }
