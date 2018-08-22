@@ -27,26 +27,26 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Fetch Router Config
-	router_config, err := router.FetchConfig(r.Host, uri)
+	routerConfig, err := router.FetchConfig(r.Host, uri)
 	if err != nil {
 		w.Write([]byte{})
 		return
 	}
 
 	//Read Cache
-	cache_key := ""
-	if r.Method == "GET" && router_config["cache"] == cache.ENABLED {
-		cache_key = router_config["host"] + uri
-		multi_cache := cache.MGetCache([]string{"header:" + cache_key, "body:" + cache_key})
-		header_str := multi_cache[0]
-		body_str := multi_cache[1]
-		if len(header_str) > 0 {
-			headers := util.DeSerialize(header_str)
+	cacheKey := ""
+	if r.Method == "GET" && routerConfig["cache"] == cache.ENABLED {
+		cacheKey = routerConfig["host"] + uri
+		multiCache := cache.MGetCache([]string{"header:" + cacheKey, "body:" + cacheKey})
+		headerStr := multiCache[0]
+		bodyStr := multiCache[1]
+		if len(headerStr) > 0 {
+			headers := util.DeSerialize(headerStr)
 			for key, value := range headers {
 				w.Header().Add(key, value)
 			}
-			if len(body_str) > 0 {
-				w.Write([]byte(filter.OnResponse(body_str)))
+			if len(bodyStr) > 0 {
+				w.Write([]byte(filter.OnResponse(bodyStr)))
 				return
 			}
 		}
@@ -54,23 +54,23 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Proxy Request
-	proxy_r, err := http.NewRequest(r.Method, router_config["host"]+uri, r.Body)
+	proxyR, err := http.NewRequest(r.Method, routerConfig["host"]+uri, r.Body)
 	if err != nil {
 		//todo log
 		fmt.Println(err)
 		w.Write([]byte{})
 		return
 	}
-	proxy_r.Header = r.Header
-	url_obj, err := url.Parse(router_config["host"])
+	proxyR.Header = r.Header
+	urlObj, err := url.Parse(routerConfig["host"])
 	if err == nil {
-		proxy_r.Header.Add("Host", url_obj.Host)
+		proxyR.Header.Add("Host", urlObj.Host)
 	}
 	for _, cookie := range r.Cookies() {
-		proxy_r.AddCookie(cookie)
+		proxyR.AddCookie(cookie)
 	}
 	client := &http.Client{}
-	resp, err := client.Do(proxy_r)
+	resp, err := client.Do(proxyR)
 	if err != nil {
 		//todo log
 		fmt.Println(err)
@@ -87,10 +87,10 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Update Header Cache
-	if r.Method == "GET" && router_config["cache"] == cache.ENABLED {
-		ttl, err := time.ParseDuration(router_config["ttl"])
+	if r.Method == "GET" && routerConfig["cache"] == cache.ENABLED {
+		ttl, err := time.ParseDuration(routerConfig["ttl"])
 		if err == nil {
-			cache.SetCache("header:"+cache_key, util.Serialize(resp.Header), ttl)
+			cache.SetCache("header:"+cacheKey, util.Serialize(resp.Header), ttl)
 		}
 	}
 
@@ -102,14 +102,14 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.Write([]byte{})
 		return
 	}
-	body_str := string(body)
-	w.Write([]byte(filter.OnResponse(body_str)))
+	bodyStr := string(body)
+	w.Write([]byte(filter.OnResponse(bodyStr)))
 
 	//Update Body Cache
-	if r.Method == "GET" && router_config["cache"] == cache.ENABLED {
-		ttl, err := time.ParseDuration(router_config["ttl"])
+	if r.Method == "GET" && routerConfig["cache"] == cache.ENABLED {
+		ttl, err := time.ParseDuration(routerConfig["ttl"])
 		if err == nil {
-			cache.SetCache("body:"+cache_key, body_str, ttl)
+			cache.SetCache("body:"+cacheKey, bodyStr, ttl)
 		}
 	}
 }
