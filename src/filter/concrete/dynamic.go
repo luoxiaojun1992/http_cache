@@ -61,3 +61,7 @@ func (dc *DynamicContent) Handle(body string) string {
 
 	return body
 }
+
+func (dc *DynamicContent) IsRequest() bool {
+	return false
+}
