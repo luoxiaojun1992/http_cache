@@ -3,7 +3,7 @@ package router
 import (
 	"errors"
 	"github.com/json-iterator/go"
-	. "github.com/luoxiaojun1992/http_cache/src/environment"
+	. "github.com/luoxiaojun1992/http_cache/src/foundation/environment"
 	"io/ioutil"
 	"log"
 )

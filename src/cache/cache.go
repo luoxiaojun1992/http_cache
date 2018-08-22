@@ -2,7 +2,7 @@ package cache
 
 import (
 	"github.com/go-redis/redis"
-	. "github.com/luoxiaojun1992/http_cache/src/environment"
+	. "github.com/luoxiaojun1992/http_cache/src/foundation/environment"
 	"github.com/patrickmn/go-cache"
 	"time"
 )

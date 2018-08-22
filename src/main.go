@@ -2,9 +2,9 @@ package main
 
 import (
 	"github.com/luoxiaojun1992/http_cache/src/cache"
-	. "github.com/luoxiaojun1992/http_cache/src/environment"
+	. "github.com/luoxiaojun1992/http_cache/src/foundation/environment"
 	"github.com/luoxiaojun1992/http_cache/src/filter"
-	"github.com/luoxiaojun1992/http_cache/src/logger"
+	"github.com/luoxiaojun1992/http_cache/src/foundation/logger"
 	"github.com/luoxiaojun1992/http_cache/src/router"
 	"github.com/luoxiaojun1992/http_cache/src/server"
 	"log"

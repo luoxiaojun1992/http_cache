@@ -2,7 +2,7 @@ package logger
 
 import (
 	"github.com/getsentry/raven-go"
-	. "github.com/luoxiaojun1992/http_cache/src/environment"
+	. "github.com/luoxiaojun1992/http_cache/src/foundation/environment"
 )
 
 type sentry struct {
