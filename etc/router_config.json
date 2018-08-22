@@ -1,14 +1,14 @@
 {
     "localhost:8888":{
-            "/":{
-                "host":"http://www.example.com",
-                "ttl":"0",
-		"cache":"1"
-            },
-            "*":{
-                "host":"http://www.example.com",
-                "ttl":"0",
-		"cache":"1"
-            }
+        "/":{
+            "host":"http://www.example.com",
+            "ttl":"0",
+            "cache":"1"
+        },
+        "*":{
+            "host":"http://www.example.com",
+            "ttl":"0",
+            "cache":"1"
+        }
     }
 }
