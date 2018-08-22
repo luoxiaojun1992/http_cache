@@ -12,10 +12,10 @@ const (
 )
 
 type myCache struct {
-	localCache        *cache.Cache
+	localCache       *cache.Cache
 	localCacheSwitch int
-	redisClient       *redis.Client
-	prefix             string
+	redisClient      *redis.Client
+	prefix           string
 }
 
 var cacheObj *myCache
@@ -29,10 +29,10 @@ func NewCache() {
 	})
 
 	cacheObj = &myCache{
-		localCache:        cache.New(1*time.Second, 10*time.Minute),
+		localCache:       cache.New(1*time.Second, 10*time.Minute),
 		localCacheSwitch: EnvInt("LOCAL_CACHE_SWITCH", 0),
-		redisClient:       redisClient,
-		prefix:             Env("CACHE_PREFIX", ""),
+		redisClient:      redisClient,
+		prefix:           Env("CACHE_PREFIX", ""),
 	}
 }
 

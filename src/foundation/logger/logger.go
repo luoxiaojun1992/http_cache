@@ -15,6 +15,8 @@ func InitLogger() {
 
 func Do(err error) {
 	for _, loggerConcrete := range loggers {
-		loggerConcrete.Handle(err)
+		if loggerConcrete.IsEnabled() != 0 {
+			loggerConcrete.Handle(err)
+		}
 	}
 }

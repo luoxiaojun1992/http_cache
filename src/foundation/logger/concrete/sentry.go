@@ -15,3 +15,7 @@ func (s *Sentry) Preload() {
 func (s *Sentry) Handle(err error) {
 	raven.CaptureError(err, nil)
 }
+
+func (s *Sentry) IsEnabled() int {
+	return EnvInt("SENTRY_SWITCH", 0)
+}
