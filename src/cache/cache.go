@@ -36,35 +36,51 @@ func NewCache() {
 	}
 }
 
-func (c *myCache) close() {
-	c.redisClient.Close()
+func (mc *myCache) close() {
+	mc.redisClient.Close()
 }
 
-func (c *myCache) setCache(key, value string, ttl time.Duration) {
-	if c.localCacheSwitch == 0 {
+func (mc *myCache) setCache(key, value string, ttl time.Duration) {
+	if mc.localCacheSwitch == 0 {
 		return
 	}
-	c.localCache.Add(c.prefix+key, value, ttl)
+	mc.localCache.Set(mc.prefix+key, value, ttl)
 }
 
-func (c *myCache) getCache(key string) string {
-	if c.localCacheSwitch == 0 {
+func (mc *myCache) getCache(key string) string {
+	if mc.localCacheSwitch == 0 {
 		return ""
 	}
 
-	if x, found := c.localCache.Get(c.prefix + key); found {
+	if x, found := mc.localCache.Get(mc.prefix + key); found {
 		return x.(string)
 	}
 
 	return ""
 }
 
-func (c *myCache) setRedis(key, value string, ttl time.Duration) {
-	c.redisClient.Set(c.prefix+key, value, ttl)
+func (mc *myCache) incrementCache(key string, step int, ttl time.Duration) int {
+	key = mc.prefix + key
+
+	err := mc.localCache.Add(key, step, ttl)
+	if err == nil {
+		return step
+	}
+
+	newValue, err := mc.localCache.IncrementInt(key, step)
+	if err == nil {
+		return newValue
+	}
+
+	return 0
 }
 
-func (c *myCache) getRedis(key string) string {
-	val, err := c.redisClient.Get(c.prefix + key).Result()
+func (mc *myCache) setRedis(key, value string, ttl time.Duration) {
+	mc.redisClient.Set(mc.prefix+key, value, ttl)
+}
+
+func (mc *myCache) getRedis(key string) string {
+	val, err := mc.redisClient.Get(mc.prefix + key).Result()
 	if err == nil {
 		return val
 	}
@@ -98,4 +114,8 @@ func MGetCache(keys []string) []string {
 		vals = append(vals, localCache)
 	}
 	return vals
+}
+
+func IncrementLocalCache(key string, step int, ttl time.Duration) int {
+	return cacheObj.incrementCache(key, step, ttl)
 }

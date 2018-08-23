@@ -1,6 +1,11 @@
 package filter_concrete
 
-import "net/http"
+import (
+	"github.com/luoxiaojun1992/http_cache/src/cache"
+	. "github.com/luoxiaojun1992/http_cache/src/foundation/environment"
+	"net/http"
+	"time"
+)
 
 type FlowControl struct {
 	next http.Handler
@@ -15,7 +20,12 @@ func (fc *FlowControl) IsRequest() bool {
 }
 
 func (fc *FlowControl) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	//todo flow control
+	if cache.IncrementLocalCache("http_request_count", 1, 1*time.Second) >
+		EnvInt("REQUEST_LIMIT_COUNT", 45000) {
+		w.WriteHeader(http.StatusTooManyRequests)
+		w.Write([]byte{})
+		return
+	}
 
 	fc.next.ServeHTTP(w, r)
 }

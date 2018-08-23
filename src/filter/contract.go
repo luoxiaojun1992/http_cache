@@ -8,6 +8,7 @@ type filterProto interface {
 
 type requestFilterProto interface {
 	Next(h http.Handler)
+	ServeHTTP(w http.ResponseWriter, r *http.Request)
 }
 
 type responseFilterProto interface {
