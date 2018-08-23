@@ -23,12 +23,12 @@ func (f *File) Preload() {
 	f.logger = log.Logger()
 	r := appenders.RollingFile(logPath, true)
 	r.MaxBackupIndex = EnvInt("MAX_LOG_FILE", 10)
-	r.SetLayout(layout.Pattern("%p %d %m"))
+	r.SetLayout(layout.Pattern("[%p] %d %m"))
 	f.logger.SetAppender(r)
 }
 
 func (f *File) Handle(err error) {
-	f.logger.Log(levels.ERROR, err)
+	go func() { f.logger.Log(levels.ERROR, err) }()
 }
 
 func (f *File) IsEnabled() int {
