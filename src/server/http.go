@@ -2,7 +2,6 @@ package server
 
 import (
 	"errors"
-	"fmt"
 	"github.com/luoxiaojun1992/http_cache/src/cache"
 	"github.com/luoxiaojun1992/http_cache/src/filter"
 	. "github.com/luoxiaojun1992/http_cache/src/foundation/environment"
@@ -56,8 +55,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	//Proxy Request
 	proxyR, err := http.NewRequest(r.Method, routerConfig["host"]+uri, r.Body)
 	if err != nil {
-		//todo log
-		fmt.Println(err)
+		logger.Do(err)
 		w.Write([]byte{})
 		return
 	}
@@ -72,8 +70,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	client := &http.Client{}
 	resp, err := client.Do(proxyR)
 	if err != nil {
-		//todo log
-		fmt.Println(err)
+		logger.Do(err)
 		w.Write([]byte{})
 		return
 	}
@@ -97,8 +94,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	//Transfer Body
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		//todo log
-		fmt.Println(err)
+		logger.Do(err)
 		w.Write([]byte{})
 		return
 	}
