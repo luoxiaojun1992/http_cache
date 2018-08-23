@@ -18,7 +18,7 @@
   revision = "7535a8fa2ace0ffb684b19f28d00655459ea2dae"
 
 [[projects]]
-  digest = "1:991bb96360eb8db70a40e9c496769fe6a7bbac4047f8376494d9837397078327"
+  digest = "1:ad9585b1b4361cbe8e7d8cc31af82ef5f597b9243909daa16f2c225b8af68c46"
   name = "github.com/go-redis/redis"
   packages = [
     ".",
@@ -31,8 +31,22 @@
     "internal/util",
   ]
   pruneopts = "UT"
-  revision = "480db94d33e6088e08d628833b6c0705451d24bb"
-  version = "v6.13.2"
+  revision = "1614e579ed966441b8e0c3ccea1dd0fbbd93a6ae"
+  version = "v6.14.0"
+
+[[projects]]
+  digest = "1:f9efb765c4f3aff4b4c9948ae1aed344f3c76566ced247a9ff7c658a903b029b"
+  name = "github.com/ian-kent/go-log"
+  packages = [
+    "appenders",
+    "layout",
+    "levels",
+    "log",
+    "logger",
+  ]
+  pruneopts = "UT"
+  revision = "3562059be162516e088049acad7e3d26427faeaf"
+  version = "v0.1"
 
 [[projects]]
   branch = "master"
@@ -83,6 +97,14 @@
   version = "v2.1.0"
 
 [[projects]]
+  digest = "1:5e73b34a27d827212102605789de00bd411b2e434812133c83935fe9897c75e1"
+  name = "github.com/philhofer/fwd"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "bb6d471dc95d4fe11e432687f8b70ff496cf3136"
+  version = "v1.0.0"
+
+[[projects]]
   digest = "1:40e195917a951a8bf867cd05de2a46aaf1806c50cf92eebf4c16f78cd196f747"
   name = "github.com/pkg/errors"
   packages = ["."]
@@ -90,12 +112,33 @@
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
   version = "v0.8.0"
 
+[[projects]]
+  digest = "1:25ba8b4d08fc20215a9b41ba4bb9cb6643cc6ed7b6c3128f1cf235bbb02a232a"
+  name = "github.com/t-k/fluent-logger-golang"
+  packages = ["fluent"]
+  pruneopts = "UT"
+  revision = "0f8ec08f2057a61574b6943e75045fffbeae894e"
+  version = "v1.0.0"
+
+[[projects]]
+  digest = "1:eaa6698f44de8f2977e93c9b946e60a8af75f565058658aad2df8032b55c84e5"
+  name = "github.com/tinylib/msgp"
+  packages = ["msgp"]
+  pruneopts = "UT"
+  revision = "b2b6a672cf1e5b90748f79b8b81fc8c5cf0571a1"
+  version = "1.0.2"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
   input-imports = [
     "github.com/getsentry/raven-go",
     "github.com/go-redis/redis",
+    "github.com/ian-kent/go-log/appenders",
+    "github.com/ian-kent/go-log/layout",
+    "github.com/ian-kent/go-log/levels",
+    "github.com/ian-kent/go-log/log",
+    "github.com/ian-kent/go-log/logger",
     "github.com/importcjj/sensitive",
     "github.com/joho/godotenv",
     "github.com/json-iterator/go",
