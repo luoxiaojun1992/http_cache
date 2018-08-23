@@ -11,7 +11,11 @@ import (
 type DynamicContent struct {
 }
 
-func (dc *DynamicContent) Handle(body string) string {
+func (dc *DynamicContent) Handle(body string, isCache bool, isStatic bool) string {
+	if isStatic {
+		return body
+	}
+
 	if !strings.Contains(body, "<dynamic>") {
 		return body
 	}
@@ -64,4 +68,8 @@ func (dc *DynamicContent) Handle(body string) string {
 
 func (dc *DynamicContent) IsRequest() bool {
 	return false
+}
+
+func (dc *DynamicContent) Preload() {
+	//
 }

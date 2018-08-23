@@ -46,7 +46,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				w.Header().Add(key, value)
 			}
 			if len(bodyStr) > 0 {
-				w.Write([]byte(filter.OnResponse(bodyStr)))
+				w.Write([]byte(filter.OnResponse(bodyStr, true, false)))
 				return
 			}
 		}
@@ -103,13 +103,13 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	bodyStr := string(body)
-	w.Write([]byte(filter.OnResponse(bodyStr)))
+	w.Write([]byte(filter.OnResponse(bodyStr, false, false)))
 
 	//Update Body Cache
 	if r.Method == "GET" && routerConfig["cache"] == cache.ENABLED {
 		ttl, err := time.ParseDuration(routerConfig["ttl"])
 		if err == nil {
-			cache.SetCache("body:"+cacheKey, bodyStr, ttl)
+			cache.SetCache("body:"+cacheKey, filter.OnResponse(bodyStr, false, true), ttl)
 		}
 	}
 }

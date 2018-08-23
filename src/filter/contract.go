@@ -12,5 +12,6 @@ type requestFilterProto interface {
 }
 
 type responseFilterProto interface {
-	Handle(body string) string
+	Handle(body string, isCache bool, isStatic bool) string
+	Preload()
 }

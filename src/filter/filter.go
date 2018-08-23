@@ -23,21 +23,22 @@ func OnRequest(h http.Handler) http.Handler {
 	return requestFilters[0].(http.Handler)
 }
 
-func OnResponse(body string) string {
+func OnResponse(body string, isCache bool, isStatic bool) string {
 	for _, filterConcrete := range responseFilters {
-		body = filterConcrete.Handle(body)
+		body = filterConcrete.Handle(body, isCache, isStatic)
 	}
 
 	return body
 }
 
 func InitFilter() {
-	allFilters := []filterProto{&DynamicContent{}, &FlowControl{}}
+	allFilters := []filterProto{&DynamicContent{}, &FlowControl{}, &Sensitive{}}
 
 	for _, filter := range allFilters {
 		if filter.IsRequest() {
 			requestFilters = append(requestFilters, filter.(requestFilterProto))
 		} else {
+			filter.(responseFilterProto).Preload()
 			responseFilters = append(responseFilters, filter.(responseFilterProto))
 		}
 	}
