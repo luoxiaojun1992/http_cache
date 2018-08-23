@@ -7,7 +7,7 @@ import (
 var loggers []loggerProto
 
 func InitLogger() {
-	loggers = []loggerProto{&Sentry{}}
+	loggers = []loggerProto{&Sentry{}, &File{}}
 	for _, loggerConcrete := range loggers {
 		loggerConcrete.Preload()
 	}
