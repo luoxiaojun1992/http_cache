@@ -35,6 +35,14 @@
   version = "v6.13.2"
 
 [[projects]]
+  branch = "master"
+  digest = "1:1757f49e822f6c507f7e38100d6b98dd2e6c850be7c64bcaad327c4b48e012bf"
+  name = "github.com/importcjj/sensitive"
+  packages = ["."]
+  pruneopts = "UT"
+  revision = "facc818f1e6e72c70eee38369e0002fe34e5cda2"
+
+[[projects]]
   digest = "1:70e697d67ccaec45e16bac3a32380ebcd9e7e071079c60d0171d42cf1cf9748a"
   name = "github.com/joho/godotenv"
   packages = ["."]
@@ -88,6 +96,7 @@
   input-imports = [
     "github.com/getsentry/raven-go",
     "github.com/go-redis/redis",
+    "github.com/importcjj/sensitive",
     "github.com/joho/godotenv",
     "github.com/json-iterator/go",
     "github.com/patrickmn/go-cache",
