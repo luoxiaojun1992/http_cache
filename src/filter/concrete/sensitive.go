@@ -6,18 +6,18 @@ type Sensitive struct {
 	filter *sensitive.Filter
 }
 
-func (dc *Sensitive) Handle(body string, isCache bool, isStatic bool) string {
+func (s *Sensitive) Handle(body string, isCache bool, isStatic bool) string {
 	if !isCache {
-		body = dc.filter.Filter(body)
+		body = s.filter.Filter(body)
 	}
 
 	return body
 }
 
-func (dc *Sensitive) IsRequest() bool {
+func (s *Sensitive) IsRequest() bool {
 	return false
 }
 
-func (dc *Sensitive) Preload() {
-	dc.filter = sensitive.New()
+func (s *Sensitive) Preload() {
+	s.filter = sensitive.New()
 }
