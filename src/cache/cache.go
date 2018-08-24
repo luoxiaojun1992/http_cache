@@ -8,7 +8,8 @@ import (
 )
 
 const (
-	ENABLED = "1"
+	ENABLED  = "1"
+	DISABLED = "0"
 )
 
 type myCache struct {

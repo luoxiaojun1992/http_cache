@@ -14,6 +14,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"strings"
 	"sync"
 	"syscall"
 	"time"
@@ -100,11 +101,23 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	defer resp.Body.Close()
 
+	//Cache Control Header
+	cacheControl := ""
+
 	//Transfer Headers
 	for key, values := range resp.Header {
 		for _, value := range values {
 			w.Header().Add(key, value)
+
+			if strings.ToLower(key) == "cache-control" {
+				cacheControl = strings.ToLower(value)
+			}
 		}
+	}
+
+	//Determine if cache by cache control header
+	if !util.IfCache(cacheControl) {
+		routerConfig["cache"] = cache.DISABLED
 	}
 
 	//Update Header Cache
