@@ -115,8 +115,8 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	//Determine if cache by cache control header
-	if !util.IfCache(cacheControl) {
+	//Determine if cache by http status code and cache control header
+	if resp.StatusCode != http.StatusOK || !util.IfCache(cacheControl) {
 		routerConfig["cache"] = cache.DISABLED
 	}
 
