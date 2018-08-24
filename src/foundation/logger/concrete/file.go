@@ -43,7 +43,7 @@ func (f *File) Info(content string) {
 }
 
 func (f *File) Fatal(err error) {
-	go func() { f.logger.Fatal(err) }()
+	f.logger.Fatal(err)
 }
 
 func (f *File) Debug(content string) {
