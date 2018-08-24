@@ -121,15 +121,8 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 
-	//Determine if cache by http status code and cache control header
-	if resp.StatusCode != http.StatusOK || !util.IfCache(cacheControl) {
-		routerConfig["cache"] = cache.DISABLED
-	}
-
-	//Update Header Cache
-	if r.Method == "GET" && routerConfig["cache"] == cache.ENABLED {
-		h.updateHeaderCache(cacheKey, resp.Header, routerConfig["ttl"])
-	}
+	//Transfer HTTP Status Code
+	w.WriteHeader(resp.StatusCode)
 
 	//Transfer Body
 	body, err := ioutil.ReadAll(resp.Body)
@@ -140,6 +133,16 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 	bodyStr := string(body)
 	w.Write([]byte(filter.OnResponse(bodyStr, false, false)))
+
+	//Determine if cache by http status code and cache control header
+	if resp.StatusCode != http.StatusOK || !util.IfCache(cacheControl) {
+		routerConfig["cache"] = cache.DISABLED
+	}
+
+	//Update Header Cache
+	if r.Method == "GET" && routerConfig["cache"] == cache.ENABLED {
+		h.updateHeaderCache(cacheKey, resp.Header, routerConfig["ttl"])
+	}
 
 	//Update Body Cache
 	if r.Method == "GET" && routerConfig["cache"] == cache.ENABLED {
