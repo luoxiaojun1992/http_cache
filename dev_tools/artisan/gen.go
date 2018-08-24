@@ -5,6 +5,7 @@ import (
 	"github.com/ian-kent/go-log/log"
 	"strings"
 	"os"
+	"fmt"
 )
 
 const (
@@ -50,6 +51,10 @@ var module int
 func init() {
 	flag.StringVar(&name, "name", "", "Struct Name")
 	flag.IntVar(&module, "module", -1, "Module")
+	flag.Usage = func() {
+		fmt.Println("Usage:")
+		flag.PrintDefaults()
+	}
 }
 
 func main() {
