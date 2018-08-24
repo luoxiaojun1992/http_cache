@@ -36,6 +36,8 @@ func (h *myHandler) updateHeaderCache(cacheKey string, headers map[string][]stri
 	ttl, err := time.ParseDuration(ttlConfig)
 	if err == nil {
 		cache.SetCache("header:"+cacheKey, util.Serialize(headers), ttl)
+	} else {
+		logger.Error(err)
 	}
 }
 
@@ -43,6 +45,8 @@ func (h *myHandler) updateBodyCache(cacheKey string, bodyStr string, ttlConfig s
 	ttl, err := time.ParseDuration(ttlConfig)
 	if err == nil {
 		cache.SetCache("body:"+cacheKey, filter.OnResponse(bodyStr, false, true), ttl)
+	} else {
+		logger.Error(err)
 	}
 }
 
@@ -88,6 +92,8 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	urlObj, err := url.Parse(routerConfig["host"])
 	if err == nil {
 		proxyR.Header.Add("Host", urlObj.Host)
+	} else {
+		logger.Error(err)
 	}
 	for _, cookie := range r.Cookies() {
 		proxyR.AddCookie(cookie)
