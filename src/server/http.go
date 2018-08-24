@@ -22,12 +22,25 @@ import (
 //HTTP Handler
 type myHandler struct{}
 
-func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	//Compose URI
+func (h *myHandler) parseUri(r *http.Request) string {
 	uri := r.URL.RequestURI()
 	if len(r.URL.Fragment) > 0 {
 		uri += ("#" + r.URL.Fragment)
 	}
+
+	return uri
+}
+
+func (h *myHandler) updateHeaderCache(cacheKey string, headers map[string][]string, ttlConfig string) {
+	ttl, err := time.ParseDuration(ttlConfig)
+	if err == nil {
+		cache.SetCache("header:"+cacheKey, util.Serialize(headers), ttl)
+	}
+}
+
+func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	//Compose URI
+	uri := h.parseUri(r)
 
 	//Fetch Router Config
 	routerConfig, err := router.FetchConfig(r.Host, uri)
@@ -89,10 +102,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	//Update Header Cache
 	if r.Method == "GET" && routerConfig["cache"] == cache.ENABLED {
-		ttl, err := time.ParseDuration(routerConfig["ttl"])
-		if err == nil {
-			cache.SetCache("header:"+cacheKey, util.Serialize(resp.Header), ttl)
-		}
+		h.updateHeaderCache(cacheKey, resp.Header, routerConfig["ttl"])
 	}
 
 	//Transfer Body
