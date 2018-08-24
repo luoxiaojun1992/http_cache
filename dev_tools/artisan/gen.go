@@ -2,10 +2,10 @@ package main
 
 import (
 	"flag"
-	"github.com/ian-kent/go-log/log"
-	"strings"
-	"os"
 	"fmt"
+	"github.com/ian-kent/go-log/log"
+	"os"
+	"strings"
 )
 
 const (
@@ -14,7 +14,7 @@ const (
 	ResponseFilter
 )
 
-const LoggerTpl  = `package logger_concrete
+const LoggerTpl = `package logger_concrete
 
 type {name} struct {
 }
@@ -45,6 +45,42 @@ func ({shortName} *{name}) IsEnabled() int {
 }
 `
 
+const RequestFilterTpl = `package filter_concrete
+
+type {name} struct {
+	next http.Handler
+}
+
+func ({shortName} *{name}) Next(h http.Handler) {
+	{shortName}.next = h
+}
+
+func ({shortName} *{name}) IsRequest() bool {
+	return true
+}
+
+func ({shortName} *{name}) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	{shortName}.next.ServeHTTP(w, r)
+}
+`
+
+const ResponseFilterTpl = `package filter_concrete
+
+type {name} struct {
+}
+
+func ({shortName} *{name}) Handle(body string, isCache bool, isStatic bool) string {
+	return body
+}
+
+func ({shortName} *{name}) IsRequest() bool {
+	return false
+}
+
+func ({shortName} *{name}) Preload() {
+}
+`
+
 var name string
 var module int
 
@@ -69,28 +105,43 @@ func main() {
 	}
 
 	switch module {
-		case LOGGER:
-			genLogger(name)
-		case RequestFilter:
-		case ResponseFilter:
+	case LOGGER:
+		genLogger(name)
+	case RequestFilter:
+		genRequestFilter(name)
+	case ResponseFilter:
+		genResponseFilter(name)
 	}
 }
 
+func parseName(name string) (lowerName, shortName string) {
+	lowerName = strings.ToLower(name)
+	shortName = lowerName[:1]
+	return
+}
+
 func genLogger(name string) {
-	lowerName := strings.ToLower(name)
+	lowerName, shortName := parseName(name)
 	filePath := "../../src/foundation/logger/concrete/" + lowerName + ".go"
-	shortName := lowerName[:1]
 	loggerTpl := strings.Replace(LoggerTpl, "{name}", name, -1)
 	loggerTpl = strings.Replace(loggerTpl, "{shortName}", shortName, -1)
 	writeFile(filePath, loggerTpl)
 }
 
 func genRequestFilter(name string) {
-	//todo
+	lowerName, shortName := parseName(name)
+	filePath := "../../src/filter/concrete/" + lowerName + ".go"
+	loggerTpl := strings.Replace(RequestFilterTpl, "{name}", name, -1)
+	loggerTpl = strings.Replace(loggerTpl, "{shortName}", shortName, -1)
+	writeFile(filePath, loggerTpl)
 }
 
 func genResponseFilter(name string) {
-	//todo
+	lowerName, shortName := parseName(name)
+	filePath := "../../src/filter/concrete/" + lowerName + ".go"
+	loggerTpl := strings.Replace(ResponseFilterTpl, "{name}", name, -1)
+	loggerTpl = strings.Replace(loggerTpl, "{shortName}", shortName, -1)
+	writeFile(filePath, loggerTpl)
 }
 
 func writeFile(filePath string, fileContent string) {
