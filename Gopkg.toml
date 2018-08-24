@@ -26,8 +26,20 @@
 
 
 [[constraint]]
+  branch = "master"
+  name = "github.com/getsentry/raven-go"
+
+[[constraint]]
   name = "github.com/go-redis/redis"
-  version = "6.13.2"
+  version = "6.14.0"
+
+[[constraint]]
+  name = "github.com/ian-kent/go-log"
+  branch = "master"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/importcjj/sensitive"
 
 [[constraint]]
   name = "github.com/joho/godotenv"

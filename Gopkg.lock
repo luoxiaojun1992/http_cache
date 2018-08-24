@@ -35,7 +35,8 @@
   version = "v6.14.0"
 
 [[projects]]
-  digest = "1:f9efb765c4f3aff4b4c9948ae1aed344f3c76566ced247a9ff7c658a903b029b"
+  branch = "master"
+  digest = "1:033ed6f6b0ea7c22597c7379067e1c6225b45da633f30b5680fcc22571180216"
   name = "github.com/ian-kent/go-log"
   packages = [
     "appenders",
@@ -45,8 +46,7 @@
     "logger",
   ]
   pruneopts = "UT"
-  revision = "3562059be162516e088049acad7e3d26427faeaf"
-  version = "v0.1"
+  revision = "5731446c36ab9f716106ce0731f484c50fdf1ad1"
 
 [[projects]]
   branch = "master"
