@@ -13,6 +13,10 @@ import (
 	"net/http"
 	"net/url"
 	"time"
+	"os/signal"
+	"syscall"
+	"os"
+	"sync"
 )
 
 //HTTP Handler
@@ -111,6 +115,8 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 }
 
 func StartHttp() {
+	var wg sync.WaitGroup
+
 	s := &http.Server{
 		Addr:           Env("HTTP_HOST", "0.0.0.0") + ":" + Env("HTTP_PORT", "8888"),
 		Handler:        filter.OnRequest(&myHandler{}),
@@ -118,5 +124,20 @@ func StartHttp() {
 		WriteTimeout:   10 * time.Second,
 		MaxHeaderBytes: 1 << 20,
 	}
-	log.Fatal(s.ListenAndServe())
+
+	wg.Add(1)
+	go func(){
+		log.Println(s.ListenAndServe())
+		wg.Done()
+	}()
+
+	//Handle SIGINT and SIGTERM.
+	ch := make(chan os.Signal)
+	signal.Notify(ch, syscall.SIGINT, syscall.SIGTERM)
+	<-ch
+
+	//Graceful Shutdown
+	s.Shutdown(nil)
+
+	wg.Wait()
 }
