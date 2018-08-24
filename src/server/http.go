@@ -53,13 +53,13 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				return
 			}
 		}
-		logger.Do(errors.New("Cache Miss"))
+		logger.Error(errors.New("Cache Miss"))
 	}
 
 	//Proxy Request
 	proxyR, err := http.NewRequest(r.Method, routerConfig["host"]+uri, r.Body)
 	if err != nil {
-		logger.Do(err)
+		logger.Error(err)
 		w.Write([]byte{})
 		return
 	}
@@ -74,7 +74,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	client := &http.Client{}
 	resp, err := client.Do(proxyR)
 	if err != nil {
-		logger.Do(err)
+		logger.Error(err)
 		w.Write([]byte{})
 		return
 	}
@@ -98,7 +98,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	//Transfer Body
 	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		logger.Do(err)
+		logger.Error(err)
 		w.Write([]byte{})
 		return
 	}

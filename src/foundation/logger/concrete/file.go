@@ -3,7 +3,6 @@ package logger_concrete
 import (
 	"github.com/ian-kent/go-log/appenders"
 	"github.com/ian-kent/go-log/layout"
-	"github.com/ian-kent/go-log/levels"
 	"github.com/ian-kent/go-log/log"
 	"github.com/ian-kent/go-log/logger"
 	. "github.com/luoxiaojun1992/http_cache/src/foundation/environment"
@@ -17,7 +16,7 @@ type File struct {
 
 func (f *File) Preload() {
 	logDir := Env("LOG_DIR", "../logs/")
-	logPath := logDir + "error.log"
+	logPath := logDir + "app.log"
 
 	err := os.MkdirAll(logDir, os.ModePerm)
 	if err != nil {
@@ -31,8 +30,28 @@ func (f *File) Preload() {
 	f.logger.SetAppender(r)
 }
 
-func (f *File) Handle(err error) {
-	go func() { f.logger.Log(levels.ERROR, err) }()
+func (f *File) Error(err error) {
+	go func() { f.logger.Error(err) }()
+}
+
+func (f *File) Warning(content string) {
+	go func() { f.logger.Warn(content) }()
+}
+
+func (f *File) Info(content string) {
+	go func() { f.logger.Info(content) }()
+}
+
+func (f *File) Fatal(err error) {
+	go func() { f.logger.Fatal(err) }()
+}
+
+func (f *File) Debug(content string) {
+	go func() { f.logger.Debug(content) }()
+}
+
+func (f *File) Trace(content string) {
+	go func() { f.logger.Trace(content) }()
 }
 
 func (f *File) IsEnabled() int {
