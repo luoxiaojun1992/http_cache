@@ -23,7 +23,7 @@ func InitLogger() {
 	}
 }
 
-func Do(err error, level int) {
+func Log(err error, level int) {
 	for _, loggerConcrete := range loggers {
 		if loggerConcrete.IsEnabled() != 0 {
 			switch level {
@@ -31,39 +31,41 @@ func Do(err error, level int) {
 				loggerConcrete.Error(err)
 			case WARNING:
 				loggerConcrete.Warning(err.Error())
-			case INFO:
-				loggerConcrete.Info(err.Error())
 			case FATAL:
 				loggerConcrete.Fatal(err)
 			case DEBUG:
 				loggerConcrete.Debug(err.Error())
 			case TRACE:
 				loggerConcrete.Trace(err.Error())
+			case INFO:
+				fallthrough
+			default:
+				loggerConcrete.Info(err.Error())
 			}
 		}
 	}
 }
 
 func Error(err error) {
-	Do(err, ERROR)
+	Log(err, ERROR)
 }
 
 func Warning(content string) {
-	Do(errors.New(content), WARNING)
+	Log(errors.New(content), WARNING)
 }
 
 func Info(content string) {
-	Do(errors.New(content), INFO)
+	Log(errors.New(content), INFO)
 }
 
 func Fatal(err error) {
-	Do(err, FATAL)
+	Log(err, FATAL)
 }
 
 func Debug(content string) {
-	Do(errors.New(content), DEBUG)
+	Log(errors.New(content), DEBUG)
 }
 
 func Trace(content string) {
-	Do(errors.New(content), TRACE)
+	Log(errors.New(content), TRACE)
 }
