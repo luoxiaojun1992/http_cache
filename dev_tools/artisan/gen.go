@@ -121,27 +121,23 @@ func parseName(name string) (lowerName, shortName string) {
 }
 
 func genLogger(name string) {
-	lowerName, shortName := parseName(name)
-	filePath := "../../src/foundation/logger/concrete/" + lowerName + ".go"
-	loggerTpl := strings.Replace(LoggerTpl, "{name}", name, -1)
-	loggerTpl = strings.Replace(loggerTpl, "{shortName}", shortName, -1)
-	writeFile(filePath, loggerTpl)
+	genCode(name, "../../src/foundation/logger/concrete/", LoggerTpl)
 }
 
 func genRequestFilter(name string) {
-	lowerName, shortName := parseName(name)
-	filePath := "../../src/filter/concrete/" + lowerName + ".go"
-	loggerTpl := strings.Replace(RequestFilterTpl, "{name}", name, -1)
-	loggerTpl = strings.Replace(loggerTpl, "{shortName}", shortName, -1)
-	writeFile(filePath, loggerTpl)
+	genCode(name, "../../src/filter/concrete/", RequestFilterTpl)
 }
 
 func genResponseFilter(name string) {
+	genCode(name, "../../src/filter/concrete/", ResponseFilterTpl)
+}
+
+func genCode(name, dir, tpl string) {
 	lowerName, shortName := parseName(name)
-	filePath := "../../src/filter/concrete/" + lowerName + ".go"
-	loggerTpl := strings.Replace(ResponseFilterTpl, "{name}", name, -1)
-	loggerTpl = strings.Replace(loggerTpl, "{shortName}", shortName, -1)
-	writeFile(filePath, loggerTpl)
+	filePath := dir + lowerName + ".go"
+	tpl = strings.Replace(tpl, "{name}", name, -1)
+	tpl = strings.Replace(tpl, "{shortName}", shortName, -1)
+	writeFile(filePath, tpl)
 }
 
 func writeFile(filePath string, fileContent string) {
