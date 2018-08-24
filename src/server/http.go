@@ -12,11 +12,11 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"time"
-	"os/signal"
-	"syscall"
 	"os"
+	"os/signal"
 	"sync"
+	"syscall"
+	"time"
 )
 
 //HTTP Handler
@@ -126,7 +126,7 @@ func StartHttp() {
 	}
 
 	wg.Add(1)
-	go func(){
+	go func() {
 		log.Println(s.ListenAndServe())
 		wg.Done()
 	}()

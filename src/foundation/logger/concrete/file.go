@@ -7,6 +7,7 @@ import (
 	"github.com/ian-kent/go-log/log"
 	"github.com/ian-kent/go-log/logger"
 	. "github.com/luoxiaojun1992/http_cache/src/foundation/environment"
+	stdLog "log"
 	"os"
 )
 
@@ -18,7 +19,10 @@ func (f *File) Preload() {
 	logDir := Env("LOG_DIR", "../logs/")
 	logPath := logDir + "error.log"
 
-	os.MkdirAll(logDir, os.ModePerm)
+	err := os.MkdirAll(logDir, os.ModePerm)
+	if err != nil {
+		stdLog.Fatal(err)
+	}
 
 	f.logger = log.Logger()
 	r := appenders.RollingFile(logPath, true)
