@@ -38,6 +38,13 @@ func (h *myHandler) updateHeaderCache(cacheKey string, headers map[string][]stri
 	}
 }
 
+func (h *myHandler) updateBodyCache(cacheKey string, bodyStr string, ttlConfig string) {
+	ttl, err := time.ParseDuration(ttlConfig)
+	if err == nil {
+		cache.SetCache("body:"+cacheKey, filter.OnResponse(bodyStr, false, true), ttl)
+	}
+}
+
 func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	//Compose URI
 	uri := h.parseUri(r)
@@ -117,10 +124,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	//Update Body Cache
 	if r.Method == "GET" && routerConfig["cache"] == cache.ENABLED {
-		ttl, err := time.ParseDuration(routerConfig["ttl"])
-		if err == nil {
-			cache.SetCache("body:"+cacheKey, filter.OnResponse(bodyStr, false, true), ttl)
-		}
+		h.updateBodyCache(cacheKey, bodyStr, routerConfig["ttl"])
 	}
 }
 
