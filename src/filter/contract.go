@@ -4,6 +4,8 @@ import "net/http"
 
 type filterProto interface {
 	IsRequest() bool //Whether Request Filter
+
+	//todo IsEnabled
 }
 
 type requestFilterProto interface {

@@ -8,3 +8,5 @@ Http Cache System Written in Go
 * Redis 4.0.11
 
 ![Load Test](./docs/load_test.jpg)
+
+## Comparison Test
