@@ -1,6 +1,7 @@
 package filter_concrete
 
 import (
+	. "github.com/luoxiaojun1992/http_cache/src/foundation/environment"
 	"io/ioutil"
 	"net/http"
 	"regexp"
@@ -72,4 +73,8 @@ func (dc *DynamicContent) IsRequest() bool {
 
 func (dc *DynamicContent) Preload() {
 	//
+}
+
+func (dc *DynamicContent) IsEnabled() int {
+	return EnvInt("DYNAMIC_FILTER_SWITCH", 1)
 }

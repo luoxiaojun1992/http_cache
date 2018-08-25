@@ -25,23 +25,25 @@ func InitLogger() {
 
 func Log(err error, level int) {
 	for _, loggerConcrete := range loggers {
-		if loggerConcrete.IsEnabled() != 0 {
-			switch level {
-			case ERROR:
-				loggerConcrete.Error(err)
-			case WARNING:
-				loggerConcrete.Warning(err.Error())
-			case FATAL:
-				loggerConcrete.Fatal(err)
-			case DEBUG:
-				loggerConcrete.Debug(err.Error())
-			case TRACE:
-				loggerConcrete.Trace(err.Error())
-			case INFO:
-				fallthrough
-			default:
-				loggerConcrete.Info(err.Error())
-			}
+		if loggerConcrete.IsEnabled() == 0 {
+			continue
+		}
+
+		switch level {
+		case ERROR:
+			loggerConcrete.Error(err)
+		case WARNING:
+			loggerConcrete.Warning(err.Error())
+		case FATAL:
+			loggerConcrete.Fatal(err)
+		case DEBUG:
+			loggerConcrete.Debug(err.Error())
+		case TRACE:
+			loggerConcrete.Trace(err.Error())
+		case INFO:
+			fallthrough
+		default:
+			loggerConcrete.Info(err.Error())
 		}
 	}
 }

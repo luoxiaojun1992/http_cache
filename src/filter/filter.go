@@ -35,6 +35,10 @@ func InitFilter() {
 	allFilters := []filterProto{&DynamicContent{}, &FlowControl{}, &Sensitive{}}
 
 	for _, filter := range allFilters {
+		if filter.IsEnabled() == 0 {
+			continue
+		}
+
 		if filter.IsRequest() {
 			requestFilters = append(requestFilters, filter.(requestFilterProto))
 		} else {

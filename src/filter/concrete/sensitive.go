@@ -1,6 +1,9 @@
 package filter_concrete
 
-import "github.com/importcjj/sensitive"
+import (
+	"github.com/importcjj/sensitive"
+	. "github.com/luoxiaojun1992/http_cache/src/foundation/environment"
+)
 
 type Sensitive struct {
 	filter *sensitive.Filter
@@ -20,4 +23,8 @@ func (s *Sensitive) IsRequest() bool {
 
 func (s *Sensitive) Preload() {
 	s.filter = sensitive.New()
+}
+
+func (s *Sensitive) IsEnabled() int {
+	return EnvInt("SENSITIVE_FILTER_SWITCH", 1)
 }
