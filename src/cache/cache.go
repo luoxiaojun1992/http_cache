@@ -26,8 +26,8 @@ var cacheObj *myCache
 func NewCache() {
 	redisClient := redis.NewClient(&redis.Options{
 		Addr:     Env("REDIS_HOST", "localhost") + ":" + Env("REDIS_PORT", "6379"),
-		Password: Env("REDIS_PASSWORD", ""), // no password set
-		DB:       EnvInt("REDIS_DB", 0),     // use default DB
+		Password: Env("REDIS_PASSWORD", ""),
+		DB:       EnvInt("REDIS_DB", 0),
 		PoolSize: EnvInt("REDIS_POOL_SIZE", 200),
 	})
 
