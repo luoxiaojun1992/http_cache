@@ -4,8 +4,8 @@ import (
 	"errors"
 	"github.com/json-iterator/go"
 	. "github.com/luoxiaojun1992/http_cache/src/foundation/environment"
+	"github.com/luoxiaojun1992/http_cache/src/foundation/logger"
 	"io/ioutil"
-	"log"
 )
 
 //ThirdParty Json Serializer
@@ -18,7 +18,7 @@ func InitConfig() {
 	router = make(map[string](map[string](map[string]string)))
 	routerConfig, err := ioutil.ReadFile(Env("ROUTER_CONFIG_FILE_PATH", "../etc/router_config.json"))
 	if err != nil {
-		log.Fatal(err)
+		logger.Fatal(err)
 	}
 	if len(routerConfig) > 0 {
 		json.Unmarshal(routerConfig, &router)

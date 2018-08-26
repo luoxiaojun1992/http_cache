@@ -16,17 +16,17 @@ func init() {
 	//Init Env
 	InitEnv()
 
-	//Init Cache
-	cache.NewCache()
+	//Init Logger
+	logger.InitLogger()
 
 	//Init Router Config
 	router.InitConfig()
 
+	//Init Cache
+	cache.NewCache()
+
 	//Init Filters
 	filter.InitFilter()
-
-	//Init Logger
-	logger.InitLogger()
 }
 
 func main() {
