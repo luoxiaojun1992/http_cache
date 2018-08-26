@@ -9,7 +9,7 @@ import (
 	"github.com/luoxiaojun1992/http_cache/src/foundation/util"
 	"github.com/luoxiaojun1992/http_cache/src/router"
 	"io/ioutil"
-	"log"
+	stdLog "log"
 	"net/http"
 	"net/url"
 	"os"
@@ -163,7 +163,7 @@ func StartHttp() {
 
 	wg.Add(1)
 	go func() {
-		log.Println(s.ListenAndServe())
+		stdLog.Println(s.ListenAndServe())
 		wg.Done()
 	}()
 
