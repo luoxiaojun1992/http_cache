@@ -97,11 +97,11 @@ func main() {
 	flag.Parse()
 
 	if len(name) <= 0 {
-		log.Fatal("Name cannot be empty")
+		log.Fatal("Name cannot be empty.")
 	}
 
 	if module < 0 {
-		log.Fatal("Module cannot be less than zero")
+		log.Fatal("Module cannot be less than zero.")
 	}
 
 	switch module {
@@ -111,6 +111,8 @@ func main() {
 		genRequestFilter(name)
 	case ResponseFilter:
 		genResponseFilter(name)
+	default:
+		log.Fatal("Unsupported module.")
 	}
 }
 
@@ -137,14 +139,24 @@ func genCode(name, dir, tpl string) {
 	filePath := dir + lowerName + ".go"
 	tpl = strings.Replace(tpl, "{name}", name, -1)
 	tpl = strings.Replace(tpl, "{shortName}", shortName, -1)
-	writeFile(filePath, tpl)
+	err := writeFile(filePath, tpl)
+
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	log.Println("Generated successfully.")
 }
 
-func writeFile(filePath string, fileContent string) {
+func writeFile(filePath string, fileContent string) error {
 	file, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY, os.ModePerm)
 	if err == nil {
 		defer file.Close()
 
-		file.Write([]byte(fileContent))
+		_, err := file.Write([]byte(fileContent))
+
+		return err
 	}
+
+	return err
 }

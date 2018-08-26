@@ -12,23 +12,12 @@ import (
 	_ "net/http/pprof"
 )
 
-func main() {
-	//todo cache clean & hotfix
-	//todo monitor http handler
-
+func init() {
 	//Init Env
 	InitEnv()
 
-	//pprof
-	if EnvInt("PPROF_SWITCH", 0) == 1 {
-		go func() {
-			log.Println(http.ListenAndServe(Env("PPROF_HOST", "localhost")+":"+Env("PPROF_PORT", "6060"), nil))
-		}()
-	}
-
 	//Init Cache
 	cache.NewCache()
-	defer cache.Close()
 
 	//Init Router Config
 	router.InitConfig()
@@ -38,6 +27,17 @@ func main() {
 
 	//Init Logger
 	logger.InitLogger()
+}
+
+func main() {
+	//pprof
+	if EnvInt("PPROF_SWITCH", 0) == 1 {
+		go func() {
+			log.Println(http.ListenAndServe(Env("PPROF_HOST", "localhost")+":"+Env("PPROF_PORT", "6060"), nil))
+		}()
+	}
+
+	defer cache.Close()
 
 	//Start Proxy Server
 	server.StartHttp()

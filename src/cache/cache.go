@@ -5,6 +5,8 @@ import (
 	. "github.com/luoxiaojun1992/http_cache/src/foundation/environment"
 	"github.com/patrickmn/go-cache"
 	"time"
+	"strings"
+	"github.com/luoxiaojun1992/http_cache/src/foundation/logger"
 )
 
 const (
@@ -66,11 +68,15 @@ func (mc *myCache) incrementCache(key string, step int, ttl time.Duration) int {
 	err := mc.localCache.Add(key, step, ttl)
 	if err == nil {
 		return step
+	} else {
+		logger.Error(err)
 	}
 
 	newValue, err := mc.localCache.IncrementInt(key, step)
 	if err == nil {
 		return newValue
+	} else {
+		logger.Error(err)
 	}
 
 	return 0
@@ -84,9 +90,48 @@ func (mc *myCache) getRedis(key string) string {
 	val, err := mc.redisClient.Get(mc.prefix + key).Result()
 	if err == nil {
 		return val
+	} else {
+		logger.Error(err)
 	}
 
 	return ""
+}
+
+func (mc *myCache) delRedis(key string) (int64, error) {
+	if strings.Contains(key, "*") {
+		var cursor uint64
+		var deleted int64
+		for {
+			var keys []string
+			var err error
+			keys, cursor, err = mc.redisClient.Scan(cursor, key, 10).Result()
+			if err == nil {
+				n, err := mc.redisClient.Del(keys ...).Result()
+				if err != nil {
+					logger.Error(err)
+					return deleted, err
+				}
+
+				deleted += n
+
+				if cursor == 0 {
+					break
+				}
+			} else {
+				logger.Error(err)
+				return deleted, err
+			}
+		}
+
+		return deleted, nil
+	} else {
+		deleted, err := mc.redisClient.Del(key).Result()
+		if err != nil {
+			logger.Error(err)
+		}
+
+		return deleted, err
+	}
 }
 
 func Close() {
@@ -103,7 +148,7 @@ func SetLocalCache(key, value string) {
 }
 
 func MGetCache(keys []string) []string {
-	var vals []string
+	var values []string
 	for _, key := range keys {
 		localCache := cacheObj.getCache(key)
 		if len(localCache) <= 0 {
@@ -112,11 +157,15 @@ func MGetCache(keys []string) []string {
 				SetLocalCache(key, localCache)
 			}
 		}
-		vals = append(vals, localCache)
+		values = append(values, localCache)
 	}
-	return vals
+	return values
 }
 
 func IncrementLocalCache(key string, step int, ttl time.Duration) int {
 	return cacheObj.incrementCache(key, step, ttl)
+}
+
+func DelRedis(key string) (int64, error) {
+	return cacheObj.delRedis(key)
 }
