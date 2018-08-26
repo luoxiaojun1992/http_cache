@@ -47,6 +47,8 @@ func ({shortName} *{name}) IsEnabled() int {
 
 const RequestFilterTpl = `package filter_concrete
 
+import "net/http"
+
 type {name} struct {
 	next http.Handler
 }
@@ -117,6 +119,8 @@ func main() {
 }
 
 func parseName(name string) (lowerName, shortName string) {
+	//todo handle camel name
+
 	lowerName = strings.ToLower(name)
 	shortName = lowerName[:1]
 	return
