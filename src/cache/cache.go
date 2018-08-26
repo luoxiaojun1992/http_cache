@@ -3,10 +3,10 @@ package cache
 import (
 	"github.com/go-redis/redis"
 	. "github.com/luoxiaojun1992/http_cache/src/foundation/environment"
-	"github.com/patrickmn/go-cache"
-	"time"
-	"strings"
 	"github.com/luoxiaojun1992/http_cache/src/foundation/logger"
+	"github.com/patrickmn/go-cache"
+	"strings"
+	"time"
 )
 
 const (
@@ -106,7 +106,7 @@ func (mc *myCache) delRedis(key string) (int64, error) {
 			var err error
 			keys, cursor, err = mc.redisClient.Scan(cursor, key, 10).Result()
 			if err == nil {
-				n, err := mc.redisClient.Del(keys ...).Result()
+				n, err := mc.redisClient.Del(keys...).Result()
 				if err != nil {
 					logger.Error(err)
 					return deleted, err
@@ -124,14 +124,14 @@ func (mc *myCache) delRedis(key string) (int64, error) {
 		}
 
 		return deleted, nil
-	} else {
-		deleted, err := mc.redisClient.Del(key).Result()
-		if err != nil {
-			logger.Error(err)
-		}
-
-		return deleted, err
 	}
+
+	deleted, err := mc.redisClient.Del(key).Result()
+	if err != nil {
+		logger.Error(err)
+	}
+
+	return deleted, err
 }
 
 func Close() {
