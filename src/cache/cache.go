@@ -23,7 +23,7 @@ type myCache struct {
 
 var cacheObj *myCache
 
-func NewCache() {
+func InitCache() {
 	redisClient := redis.NewClient(&redis.Options{
 		Addr:     Env("REDIS_HOST", "localhost") + ":" + Env("REDIS_PORT", "6379"),
 		Password: Env("REDIS_PASSWORD", ""),

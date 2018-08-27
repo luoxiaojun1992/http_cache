@@ -18,8 +18,7 @@ func init() {
 		flag.PrintDefaults()
 	}
 
-	//Init Cache
-	cache.NewCache()
+	cache.InitCache()
 }
 
 func main() {

@@ -14,22 +14,11 @@ import (
 )
 
 func init() {
-	//Init Env
 	InitEnv()
-
-	//Init Logger
 	logger.InitLogger()
-
-	//Init Router Config
 	router.InitConfig()
-
-	//Init Cache
-	cache.NewCache()
-
-	//Init Filters
+	cache.InitCache()
 	filter.InitFilter()
-
-	//Init Extension
 	extension.StartUp()
 }
 
@@ -44,6 +33,5 @@ func main() {
 	defer cache.Close()
 	defer extension.ShutDown()
 
-	//Start Proxy Server
 	server.StartHttp()
 }
