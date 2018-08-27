@@ -32,7 +32,7 @@ func OnResponse(body string, isCache bool, isStatic bool) string {
 }
 
 func InitFilter() {
-	allFilters := []filterProto{&DynamicContent{}, &FlowControl{}, &Sensitive{}}
+	allFilters := []filterProto{&FlowControl{}, &Header{}, &DynamicContent{}, &Sensitive{}}
 
 	for _, filter := range allFilters {
 		if filter.IsEnabled() == 0 {

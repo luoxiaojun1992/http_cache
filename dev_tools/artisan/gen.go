@@ -64,6 +64,10 @@ func ({shortName} *{name}) IsRequest() bool {
 func ({shortName} *{name}) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	{shortName}.next.ServeHTTP(w, r)
 }
+
+func ({shortName} *{name}) IsEnabled() int {
+	return 0
+}
 `
 
 const ResponseFilterTpl = `package filter_concrete
@@ -80,6 +84,10 @@ func ({shortName} *{name}) IsRequest() bool {
 }
 
 func ({shortName} *{name}) Preload() {
+}
+
+func ({shortName} *{name}) IsEnabled() int {
+	return 0
 }
 `
 
