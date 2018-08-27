@@ -12,6 +12,7 @@ const (
 	LOGGER = iota
 	RequestFilter
 	ResponseFilter
+	EXTENSION
 )
 
 const LoggerTpl = `package logger_concrete
@@ -91,6 +92,24 @@ func ({shortName} *{name}) IsEnabled() int {
 }
 `
 
+const ExtensionTpl = `package extension_concrete
+
+type {name} struct {
+}
+
+func ({shortName} *{name}) StartUp() {
+	//
+}
+
+func ({shortName} *{name}) ShutDown() {
+	//
+}
+
+func ({shortName} *{name}) IsEnabled() int {
+	return 0
+}
+`
+
 var name string
 var module int
 
@@ -121,6 +140,8 @@ func main() {
 		genRequestFilter(name)
 	case ResponseFilter:
 		genResponseFilter(name)
+	case EXTENSION:
+		genExtension(name)
 	default:
 		log.Fatal("Unsupported module.")
 	}
@@ -144,6 +165,10 @@ func genRequestFilter(name string) {
 
 func genResponseFilter(name string) {
 	genCode(name, "../../src/filter/concrete/", ResponseFilterTpl)
+}
+
+func genExtension(name string) {
+	genCode(name, "../../src/foundation/extension/concrete/", ExtensionTpl)
 }
 
 func genCode(name, dir, tpl string) {
