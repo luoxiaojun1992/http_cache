@@ -70,7 +70,7 @@
   packages = ["."]
   pruneopts = "UT"
   revision = "1624edc4454b8682399def8740d46db5e4362ba4"
-  version = "1.1.5"
+  version = "v1.1.5"
 
 [[projects]]
   digest = "1:33422d238f147d247752996a26574ac48dcf472976eda7f5134015f06bf16563"
@@ -136,13 +136,13 @@
     "github.com/go-redis/redis",
     "github.com/ian-kent/go-log/appenders",
     "github.com/ian-kent/go-log/layout",
-    "github.com/ian-kent/go-log/levels",
     "github.com/ian-kent/go-log/log",
     "github.com/ian-kent/go-log/logger",
     "github.com/importcjj/sensitive",
     "github.com/joho/godotenv",
     "github.com/json-iterator/go",
     "github.com/patrickmn/go-cache",
+    "github.com/pkg/errors",
   ]
   solver-name = "gps-cdcl"
   solver-version = 1
