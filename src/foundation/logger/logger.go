@@ -19,6 +19,10 @@ var loggers []loggerProto
 func InitLogger() {
 	loggers = []loggerProto{&Sentry{}, &File{}}
 	for _, loggerConcrete := range loggers {
+		if loggerConcrete.IsEnabled() == 0 {
+			continue
+		}
+
 		loggerConcrete.Preload()
 	}
 }

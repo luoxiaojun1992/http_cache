@@ -4,6 +4,7 @@ import (
 	"github.com/luoxiaojun1992/http_cache/src/cache"
 	"github.com/luoxiaojun1992/http_cache/src/filter"
 	. "github.com/luoxiaojun1992/http_cache/src/foundation/environment"
+	"github.com/luoxiaojun1992/http_cache/src/foundation/extension"
 	"github.com/luoxiaojun1992/http_cache/src/foundation/logger"
 	"github.com/luoxiaojun1992/http_cache/src/router"
 	"github.com/luoxiaojun1992/http_cache/src/server"
@@ -27,6 +28,9 @@ func init() {
 
 	//Init Filters
 	filter.InitFilter()
+
+	//Init Extension
+	extension.StartUp()
 }
 
 func main() {
@@ -38,6 +42,7 @@ func main() {
 	}
 
 	defer cache.Close()
+	defer extension.ShutDown()
 
 	//Start Proxy Server
 	server.StartHttp()
