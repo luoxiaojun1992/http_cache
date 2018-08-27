@@ -5,6 +5,7 @@ import "net/http"
 type filterProto interface {
 	IsRequest() bool //Whether Request Filter
 	IsEnabled() int
+	Preload()
 }
 
 type requestFilterProto interface {
@@ -14,5 +15,4 @@ type requestFilterProto interface {
 
 type responseFilterProto interface {
 	Handle(body string, isCache bool, isStatic bool) string
-	Preload()
 }

@@ -30,6 +30,10 @@ func (fc *FlowControl) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	fc.next.ServeHTTP(w, r)
 }
 
+func (fc *FlowControl) Preload() {
+	//
+}
+
 func (fc *FlowControl) IsEnabled() int {
 	return EnvInt("FLOW_FILTER_SWITCH", 1)
 }

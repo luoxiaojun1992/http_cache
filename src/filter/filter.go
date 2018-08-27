@@ -39,10 +39,11 @@ func InitFilter() {
 			continue
 		}
 
+		filter.Preload()
+
 		if filter.IsRequest() {
 			requestFilters = append(requestFilters, filter.(requestFilterProto))
 		} else {
-			filter.(responseFilterProto).Preload()
 			responseFilters = append(responseFilters, filter.(responseFilterProto))
 		}
 	}

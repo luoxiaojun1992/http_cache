@@ -21,6 +21,10 @@ func (hd *Header) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	hd.next.ServeHTTP(w, r)
 }
 
+func (hd *Header) Preload() {
+	//
+}
+
 func (hd *Header) IsEnabled() int {
 	return EnvInt("HEADER_FILTER_SWITCH", 0)
 }
