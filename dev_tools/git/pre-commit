@@ -1,0 +1,4 @@
+#! /bin/bash
+
+cd src && go fmt ./... && cd ..
+cd dev_tools/artisan && go fmt ./... && cd ../..
