@@ -9,6 +9,7 @@ import (
 	"time"
 )
 
+// ENABLED ...
 const (
 	ENABLED  = "1"
 	DISABLED = "0"
@@ -23,6 +24,7 @@ type myCache struct {
 
 var cacheObj *myCache
 
+// InitCache ...
 func InitCache() {
 	redisClient := redis.NewClient(&redis.Options{
 		Addr:     Env("REDIS_HOST", "localhost") + ":" + Env("REDIS_PORT", "6379"),
@@ -134,19 +136,23 @@ func (mc *myCache) delRedis(key string) (int64, error) {
 	return deleted, err
 }
 
+// Close ...
 func Close() {
 	cacheObj.close()
 }
 
+// SetCache ...
 func SetCache(key, value string, ttl time.Duration) {
 	cacheObj.setRedis(key, value, ttl)
 	SetLocalCache(key, value)
 }
 
+// SetLocalCache ...
 func SetLocalCache(key, value string) {
 	cacheObj.setCache(key, value, 1*time.Second)
 }
 
+// MGetCache ...
 func MGetCache(keys []string) []string {
 	var values []string
 	for _, key := range keys {
@@ -162,10 +168,12 @@ func MGetCache(keys []string) []string {
 	return values
 }
 
+// IncrementLocalCache ...
 func IncrementLocalCache(key string, step int, ttl time.Duration) int {
 	return cacheObj.incrementCache(key, step, ttl)
 }
 
+// DelRedis ...
 func DelRedis(key string) (int64, error) {
 	return cacheObj.delRedis(key)
 }
