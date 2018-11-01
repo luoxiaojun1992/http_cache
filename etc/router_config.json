@@ -3,12 +3,14 @@
         "/":{
             "host":"http://www.example.com",
             "ttl":"0",
-            "cache":"1"
+            "cache":"1",
+            "timeout": "5s"
         },
         "*":{
             "host":"http://www.example.com",
             "ttl":"0",
-            "cache":"1"
+            "cache":"1",
+            "timeout": "5s"
         }
     }
 }

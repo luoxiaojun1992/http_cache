@@ -98,7 +98,13 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	for _, cookie := range r.Cookies() {
 		proxyR.AddCookie(cookie)
 	}
-	client := &http.Client{}
+	timeout := time.Second * 5 //Default 5s
+	if configTimeout, errTimeout := time.ParseDuration(routerConfig["timeout"]); errTimeout == nil {
+		timeout = configTimeout
+	} else {
+		logger.Error(errTimeout)
+	}
+	client := &http.Client{Timeout:timeout}
 	resp, err := client.Do(proxyR)
 	if err != nil {
 		logger.Error(err)
