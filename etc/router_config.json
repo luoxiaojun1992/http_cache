@@ -4,7 +4,8 @@
             "host":"http://127.0.0.1:9501",
             "ttl":"0",
             "cache":"1",
-            "timeout": "5s"
+            "timeout": "5s",
+            "preserve_host":"0"
         }
     }
 }

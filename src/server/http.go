@@ -121,11 +121,13 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	proxyR.Header = r.Header
-	urlObj, err := url.Parse(routerConfig["host"])
-	if err == nil {
-		proxyR.Header.Add("Host", urlObj.Host)
-	} else {
-		logger.Error(err)
+	if routerConfig["preserve_host"] != "1" {
+		urlObj, err := url.Parse(routerConfig["host"])
+		if err == nil {
+			proxyR.Header.Add("Host", urlObj.Host)
+		} else {
+			logger.Error(err)
+		}
 	}
 	for _, cookie := range r.Cookies() {
 		proxyR.AddCookie(cookie)
