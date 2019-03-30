@@ -11,6 +11,7 @@ import (
 	"log"
 	"net/http"
 	_ "net/http/pprof"
+	"github.com/luoxiaojun1992/http_cache/src/redis"
 )
 
 func init() {
@@ -18,6 +19,7 @@ func init() {
 	logger.InitLogger()
 	router.InitConfig()
 	cache.InitCache()
+	redis.InitRedis()
 	filter.InitFilter()
 	extension.StartUp()
 }
@@ -30,7 +32,7 @@ func main() {
 		}()
 	}
 
-	defer cache.Close()
+	defer redis.Close()
 	defer extension.ShutDown()
 
 	server.StartHttp()

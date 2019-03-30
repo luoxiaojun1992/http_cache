@@ -18,6 +18,8 @@ import (
 	"sync"
 	"syscall"
 	"time"
+	"strconv"
+	"github.com/luoxiaojun1992/http_cache/src/redis"
 )
 
 //HTTP Handler
@@ -26,7 +28,8 @@ type myHandler struct{}
 func (h *myHandler) parseUri(r *http.Request) string {
 	uri := r.URL.RequestURI()
 	if len(r.URL.Fragment) > 0 {
-		uri += ("#" + r.URL.Fragment)
+		queryString := "#" + r.URL.Fragment
+		uri += queryString
 	}
 
 	return uri
@@ -35,7 +38,10 @@ func (h *myHandler) parseUri(r *http.Request) string {
 func (h *myHandler) updateHeaderCache(cacheKey string, headers map[string][]string, ttlConfig string) {
 	ttl, err := time.ParseDuration(ttlConfig)
 	if err == nil {
-		cache.SetCache("header:"+cacheKey, util.Serialize(headers), ttl)
+		serializedHeaders := util.Serialize(headers)
+		cache.Set("header:"+cacheKey, serializedHeaders, 1*time.Second)
+		redis.Set("header:"+cacheKey+":ttl", ttl.String(), ttl)
+		redis.Set("header:"+cacheKey, serializedHeaders, 0)
 	} else {
 		logger.Error(err)
 	}
@@ -44,7 +50,10 @@ func (h *myHandler) updateHeaderCache(cacheKey string, headers map[string][]stri
 func (h *myHandler) updateBodyCache(cacheKey string, bodyStr string, ttlConfig string) {
 	ttl, err := time.ParseDuration(ttlConfig)
 	if err == nil {
-		cache.SetCache("body:"+cacheKey, filter.OnResponse(bodyStr, false, true), ttl)
+		filteredBody := filter.OnResponse(bodyStr, false, true)
+		cache.Set("body:"+cacheKey, filteredBody, 1*time.Second)
+		redis.Set("body:"+cacheKey+":ttl", ttl.String(), ttl)
+		redis.Set("body:"+cacheKey, filteredBody, 0)
 	} else {
 		logger.Error(err)
 	}
@@ -63,22 +72,45 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	//Read Cache
 	cacheKey := ""
-	if r.Method == "GET" && routerConfig["cache"] == cache.ENABLED {
-		cacheKey = routerConfig["host"] + uri
-		multiCache := cache.MGetCache([]string{"header:" + cacheKey, "body:" + cacheKey})
-		headerStr := multiCache[0]
-		bodyStr := multiCache[1]
-		if len(headerStr) > 0 {
+	if r.Method == "GET" && routerConfig["cache"] == strconv.Itoa(router.CACHE_ENABLED) {
+		cacheKey = routerConfig["host"]+uri
+		headerStr := cache.Get("header:"+cacheKey)
+		if len(headerStr) <= 0 {
+			if len(redis.Get("header:"+cacheKey+":ttl")) <= 0 {
+				if redis.SetNx("header:"+cacheKey+":update:lock", "1", 5*time.Second) {
+					headerStr = ""
+				} else {
+					headerStr = redis.Get("header:"+cacheKey)
+				}
+			} else {
+				headerStr = redis.Get("header:"+cacheKey)
+			}
+		}
+
+		bodyStr := cache.Get("body:"+cacheKey)
+		if len(bodyStr) <= 0 {
+			if len(redis.Get("body:"+cacheKey+":ttl")) <= 0 {
+				if redis.SetNx("body:"+cacheKey+":update:lock", "1", 5*time.Second) {
+					bodyStr = ""
+				} else {
+					bodyStr = redis.Get("body:"+cacheKey)
+				}
+			} else {
+				bodyStr = redis.Get("body:"+cacheKey)
+			}
+		}
+
+		if len(headerStr) > 0 && len(bodyStr) > 0 {
 			headers := util.DeSerialize(headerStr)
 			for key, value := range headers {
 				w.Header().Add(key, value)
 			}
-			if len(bodyStr) > 0 {
-				w.Write([]byte(filter.OnResponse(bodyStr, true, false)))
-				return
-			}
+
+			w.Write([]byte(filter.OnResponse(bodyStr, true, false)))
+			return
 		}
-		logger.Error(errors.New("Cache Miss"))
+
+		logger.Error(errors.New("CacheMiss"))
 	}
 
 	//Proxy Request
@@ -142,16 +174,16 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	//Determine if cache by http status code and cache control header
 	if resp.StatusCode != http.StatusOK || !util.IfCache(cacheControl) {
-		routerConfig["cache"] = cache.DISABLED
+		routerConfig["cache"] = strconv.Itoa(router.CACHE_DISABLED)
 	}
 
 	//Update Header Cache
-	if r.Method == "GET" && routerConfig["cache"] == cache.ENABLED {
+	if r.Method == "GET" && routerConfig["cache"] == strconv.Itoa(router.CACHE_ENABLED) {
 		h.updateHeaderCache(cacheKey, resp.Header, routerConfig["ttl"])
 	}
 
 	//Update Body Cache
-	if r.Method == "GET" && routerConfig["cache"] == cache.ENABLED {
+	if r.Method == "GET" && routerConfig["cache"] == strconv.Itoa(router.CACHE_ENABLED) {
 		h.updateBodyCache(cacheKey, bodyStr, routerConfig["ttl"])
 	}
 }
@@ -172,6 +204,8 @@ func StartHttp() {
 		stdLog.Println(s.ListenAndServe())
 		wg.Done()
 	}()
+
+	stdLog.Println("Server started.")
 
 	//Handle SIGINT and SIGTERM.
 	ch := make(chan os.Signal)
