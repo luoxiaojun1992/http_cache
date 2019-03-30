@@ -1,7 +1,6 @@
 package server
 
 import (
-	"errors"
 	"github.com/luoxiaojun1992/http_cache/src/cache"
 	"github.com/luoxiaojun1992/http_cache/src/filter"
 	. "github.com/luoxiaojun1992/http_cache/src/foundation/environment"
@@ -106,12 +105,13 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				w.Header().Add(key, value)
 			}
 
+			w.Header().Add("X-Proxy-Cache", "hit")
 			w.Write([]byte(filter.OnResponse(bodyStr, true, false)))
 			return
 		}
-
-		logger.Error(errors.New("CacheMiss"))
 	}
+
+	w.Header().Add("X-Proxy-Cache", "miss")
 
 	//Proxy Request
 	proxyR, err := http.NewRequest(r.Method, routerConfig["host"]+uri, r.Body)

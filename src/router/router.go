@@ -9,8 +9,8 @@ import (
 )
 
 const(
-	CACHE_ENABLED = iota
-	CACHE_DISABLED
+	CACHE_DISABLED = iota
+	CACHE_ENABLED
 )
 
 

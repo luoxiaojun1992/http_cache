@@ -1,13 +1,7 @@
 {
-    "localhost:8888":{
-        "/":{
-            "host":"http://www.example.com",
-            "ttl":"0",
-            "cache":"1",
-            "timeout": "5s"
-        },
+    "127.0.0.1:8888":{
         "*":{
-            "host":"http://www.example.com",
+            "host":"http://127.0.0.1:9501",
             "ttl":"0",
             "cache":"1",
             "timeout": "5s"
