@@ -8,11 +8,10 @@ import (
 	"io/ioutil"
 )
 
-const(
+const (
 	CACHE_DISABLED = iota
 	CACHE_ENABLED
 )
-
 
 //ThirdParty Json Serializer
 var json = jsoniter.ConfigCompatibleWithStandardLibrary

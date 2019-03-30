@@ -28,8 +28,8 @@ func InitRedis() {
 	})
 
 	redisObj = &myRedis{
-		redisClient:      redisClient,
-		prefix:           Env("CACHE_PREFIX", ""),
+		redisClient: redisClient,
+		prefix:      Env("CACHE_PREFIX", ""),
 	}
 }
 

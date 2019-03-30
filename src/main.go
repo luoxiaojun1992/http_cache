@@ -6,12 +6,12 @@ import (
 	. "github.com/luoxiaojun1992/http_cache/src/foundation/environment"
 	"github.com/luoxiaojun1992/http_cache/src/foundation/extension"
 	"github.com/luoxiaojun1992/http_cache/src/foundation/logger"
+	"github.com/luoxiaojun1992/http_cache/src/redis"
 	"github.com/luoxiaojun1992/http_cache/src/router"
 	"github.com/luoxiaojun1992/http_cache/src/server"
 	"log"
 	"net/http"
 	_ "net/http/pprof"
-	"github.com/luoxiaojun1992/http_cache/src/redis"
 )
 
 func init() {

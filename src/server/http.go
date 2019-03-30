@@ -6,6 +6,7 @@ import (
 	. "github.com/luoxiaojun1992/http_cache/src/foundation/environment"
 	"github.com/luoxiaojun1992/http_cache/src/foundation/logger"
 	"github.com/luoxiaojun1992/http_cache/src/foundation/util"
+	"github.com/luoxiaojun1992/http_cache/src/redis"
 	"github.com/luoxiaojun1992/http_cache/src/router"
 	"io/ioutil"
 	stdLog "log"
@@ -13,12 +14,11 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"strconv"
 	"strings"
 	"sync"
 	"syscall"
 	"time"
-	"strconv"
-	"github.com/luoxiaojun1992/http_cache/src/redis"
 )
 
 //HTTP Handler
@@ -72,30 +72,30 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	//Read Cache
 	cacheKey := ""
 	if r.Method == "GET" && routerConfig["cache"] == strconv.Itoa(router.CACHE_ENABLED) {
-		cacheKey = routerConfig["host"]+uri
-		headerStr := cache.Get("header:"+cacheKey)
+		cacheKey = routerConfig["host"] + uri
+		headerStr := cache.Get("header:" + cacheKey)
 		if len(headerStr) <= 0 {
 			if len(redis.Get("header:"+cacheKey+":ttl")) <= 0 {
 				if redis.SetNx("header:"+cacheKey+":update:lock", "1", 5*time.Second) {
 					headerStr = ""
 				} else {
-					headerStr = redis.Get("header:"+cacheKey)
+					headerStr = redis.Get("header:" + cacheKey)
 				}
 			} else {
-				headerStr = redis.Get("header:"+cacheKey)
+				headerStr = redis.Get("header:" + cacheKey)
 			}
 		}
 
-		bodyStr := cache.Get("body:"+cacheKey)
+		bodyStr := cache.Get("body:" + cacheKey)
 		if len(bodyStr) <= 0 {
 			if len(redis.Get("body:"+cacheKey+":ttl")) <= 0 {
 				if redis.SetNx("body:"+cacheKey+":update:lock", "1", 5*time.Second) {
 					bodyStr = ""
 				} else {
-					bodyStr = redis.Get("body:"+cacheKey)
+					bodyStr = redis.Get("body:" + cacheKey)
 				}
 			} else {
-				bodyStr = redis.Get("body:"+cacheKey)
+				bodyStr = redis.Get("body:" + cacheKey)
 			}
 		}
 
@@ -136,7 +136,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	} else {
 		logger.Error(errTimeout)
 	}
-	client := &http.Client{Timeout:timeout}
+	client := &http.Client{Timeout: timeout}
 	resp, err := client.Do(proxyR)
 	if err != nil {
 		logger.Error(err)
