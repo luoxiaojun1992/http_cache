@@ -22,7 +22,9 @@ import (
 )
 
 //HTTP Handler
-type myHandler struct{}
+type myHandler struct{
+	next http.Handler
+}
 
 func (h *myHandler) parseUri(r *http.Request) string {
 	uri := r.URL.RequestURI()
@@ -56,6 +58,10 @@ func (h *myHandler) updateBodyCache(cacheKey string, bodyStr string, ttlConfig s
 	} else {
 		logger.Error(err)
 	}
+}
+
+func (h *myHandler) Next(nextH http.Handler) {
+	h.next = nextH
 }
 
 func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {

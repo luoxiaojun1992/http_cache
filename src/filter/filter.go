@@ -9,14 +9,11 @@ var requestFilters []requestFilterProto
 var responseFilters []responseFilterProto
 
 func OnRequest(h http.Handler) http.Handler {
-	requestFiltersLen := len(requestFilters)
+	requestFilters = append(requestFilters, h.(requestFilterProto))
+
 	for i, filterConcrete := range requestFilters {
 		if i > 0 {
 			requestFilters[i-1].Next(filterConcrete.(http.Handler))
-		}
-
-		if i == requestFiltersLen-1 {
-			filterConcrete.Next(h)
 		}
 	}
 
