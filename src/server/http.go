@@ -78,9 +78,12 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	//Read Cache
 	cacheKey := ""
+	fmt.Println(r.Method)
+	fmt.Println(routerConfig["cache"])
 	if r.Method == "GET" && routerConfig["cache"] == strconv.Itoa(router.CACHE_ENABLED) {
 		cacheKey = routerConfig["host"] + uri
 		headerStr := cache.Get("header:" + cacheKey)
+		fmt.Println("1" + headerStr)
 		if len(headerStr) <= 0 {
 			if len(redis.Get("header:"+cacheKey+":ttl")) <= 0 {
 				if redis.SetNx("header:"+cacheKey+":update:lock", "1", 5*time.Second) {
@@ -105,6 +108,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		bodyStr := cache.Get("body:" + cacheKey)
+		fmt.Println("1" + bodyStr)
 		if len(bodyStr) <= 0 {
 			if len(redis.Get("body:"+cacheKey+":ttl")) <= 0 {
 				if redis.SetNx("body:"+cacheKey+":update:lock", "1", 5*time.Second) {
