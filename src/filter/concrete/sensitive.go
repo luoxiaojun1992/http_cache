@@ -26,5 +26,5 @@ func (s *Sensitive) Preload() {
 }
 
 func (s *Sensitive) IsEnabled() int {
-	return EnvInt("SENSITIVE_FILTER_SWITCH", 1)
+	return EnvInt("SENSITIVE_FILTER_SWITCH", 0)
 }

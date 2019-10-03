@@ -19,6 +19,7 @@ import (
 	"sync"
 	"syscall"
 	"time"
+	"fmt"
 )
 
 //HTTP Handler
@@ -89,6 +90,17 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				}
 			} else {
 				headerStr = redis.Get("header:" + cacheKey)
+				fmt.Println(headerStr)
+			}
+
+			if len(headerStr) > 0 {
+				headerArr := make(map[string][]string)
+				lines := strings.Split(headerStr, strings.Repeat(util.CRLF, 2))
+				for _, line := range lines {
+					pair := strings.Split(line, util.CRLF)
+					headerArr[pair[0]] = append(headerArr[pair[0]], pair[1])
+				}
+				h.updateHeaderCache(cacheKey, headerArr, routerConfig["ttl"])
 			}
 		}
 
@@ -102,6 +114,11 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 				}
 			} else {
 				bodyStr = redis.Get("body:" + cacheKey)
+				fmt.Println(bodyStr)
+			}
+
+			if len(bodyStr) > 0 {
+				h.updateBodyCache(cacheKey, bodyStr, routerConfig["ttl"])
 			}
 		}
 

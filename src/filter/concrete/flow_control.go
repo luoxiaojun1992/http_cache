@@ -35,5 +35,5 @@ func (fc *FlowControl) Preload() {
 }
 
 func (fc *FlowControl) IsEnabled() int {
-	return EnvInt("FLOW_FILTER_SWITCH", 1)
+	return EnvInt("FLOW_FILTER_SWITCH", 0)
 }

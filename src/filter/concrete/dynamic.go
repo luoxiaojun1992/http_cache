@@ -76,5 +76,5 @@ func (dc *DynamicContent) Preload() {
 }
 
 func (dc *DynamicContent) IsEnabled() int {
-	return EnvInt("DYNAMIC_FILTER_SWITCH", 1)
+	return EnvInt("DYNAMIC_FILTER_SWITCH", 0)
 }
