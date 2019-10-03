@@ -36,7 +36,17 @@ func FetchConfig(requestHost string, uri string) (map[string]string, error) {
 	if !ok {
 		v, ok := router[requestHost]["*"]
 		if !ok {
-			return routerConfig, errors.New("router config not set")
+			v, ok := router["*"][uri]
+			if !ok {
+				v, ok := router["*"]["*"]
+				if !ok {
+					return routerConfig, errors.New("router config not set")
+				} else {
+					routerConfig = v
+				}
+			} else {
+				routerConfig = v
+			}
 		} else {
 			routerConfig = v
 		}
