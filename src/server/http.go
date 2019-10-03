@@ -40,7 +40,11 @@ func (h *myHandler) updateHeaderCache(cacheKey string, headers map[string][]stri
 	ttl, err := time.ParseDuration(ttlConfig)
 	if err == nil {
 		serializedHeaders := util.Serialize(headers)
-		cache.Set("header:"+cacheKey, serializedHeaders, 1*time.Second)
+		if ttl.Seconds() > 0 {
+			cache.Set("header:"+cacheKey, serializedHeaders, ttl)
+		} else {
+			cache.Set("header:"+cacheKey, serializedHeaders, 1*time.Second)
+		}
 		redis.Set("header:"+cacheKey+":ttl", ttl.String(), ttl)
 		redis.Set("header:"+cacheKey, serializedHeaders, 0)
 	} else {
@@ -52,7 +56,11 @@ func (h *myHandler) updateBodyCache(cacheKey string, bodyStr string, ttlConfig s
 	ttl, err := time.ParseDuration(ttlConfig)
 	if err == nil {
 		filteredBody := filter.OnResponse(bodyStr, false, true)
-		cache.Set("body:"+cacheKey, filteredBody, 1*time.Second)
+		if ttl.Seconds() > 0 {
+			cache.Set("body:"+cacheKey, filteredBody, ttl)
+		} else {
+			cache.Set("body:"+cacheKey, filteredBody, 5*time.Second)
+		}
 		redis.Set("body:"+cacheKey+":ttl", ttl.String(), ttl)
 		redis.Set("body:"+cacheKey, filteredBody, 0)
 	} else {
@@ -83,6 +91,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if len(headerStr) <= 0 {
 			if len(redis.Get("header:"+cacheKey+":ttl")) <= 0 {
 				if redis.SetNx("header:"+cacheKey+":update:lock", "1", 5*time.Second) {
+					defer redis.Del("header:"+cacheKey+":update:lock")
 					headerStr = ""
 				} else {
 					headerStr = redis.Get("header:" + cacheKey)
@@ -92,13 +101,14 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if len(headerStr) > 0 {
-				headerArr := make(map[string][]string)
-				lines := strings.Split(headerStr, strings.Repeat(util.CRLF, 2))
-				for _, line := range lines {
-					pair := strings.Split(line, util.CRLF)
-					headerArr[pair[0]] = append(headerArr[pair[0]], pair[1])
+				ttl, err := time.ParseDuration(routerConfig["ttl"])
+				if err == nil {
+					if ttl.Seconds() > 0 {
+						cache.Set("header:"+cacheKey, headerStr, ttl)
+					} else {
+						cache.Set("header:"+cacheKey, headerStr, 5*time.Second)
+					}
 				}
-				h.updateHeaderCache(cacheKey, headerArr, routerConfig["ttl"])
 			}
 		}
 
@@ -106,6 +116,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		if len(bodyStr) <= 0 {
 			if len(redis.Get("body:"+cacheKey+":ttl")) <= 0 {
 				if redis.SetNx("body:"+cacheKey+":update:lock", "1", 5*time.Second) {
+					defer redis.Del("body:"+cacheKey+":update:lock")
 					bodyStr = ""
 				} else {
 					bodyStr = redis.Get("body:" + cacheKey)
@@ -115,7 +126,14 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if len(bodyStr) > 0 {
-				h.updateBodyCache(cacheKey, bodyStr, routerConfig["ttl"])
+				ttl, err := time.ParseDuration(routerConfig["ttl"])
+				if err == nil {
+					if ttl.Seconds() > 0 {
+						cache.Set("body:"+cacheKey, bodyStr, ttl)
+					} else {
+						cache.Set("body:"+cacheKey, bodyStr, 5*time.Second)
+					}
+				}
 			}
 		}
 
