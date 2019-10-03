@@ -207,16 +207,19 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	fmt.Println("8" + routerConfig["host"]+uri)
 	fmt.Println("9" + r.Method)
 	if resp.StatusCode != http.StatusOK || !util.IfCache(cacheControl) {
+		fmt.Println("10")
 		routerConfig["cache"] = strconv.Itoa(router.CACHE_DISABLED)
 	}
 
 	//Update Header Cache
 	if r.Method == "GET" && routerConfig["cache"] == strconv.Itoa(router.CACHE_ENABLED) {
+		fmt.Println("11")
 		h.updateHeaderCache(cacheKey, resp.Header, routerConfig["ttl"])
 	}
 
 	//Update Body Cache
 	if r.Method == "GET" && routerConfig["cache"] == strconv.Itoa(router.CACHE_ENABLED) {
+		fmt.Println("12")
 		h.updateBodyCache(cacheKey, bodyStr, routerConfig["ttl"])
 	}
 }
