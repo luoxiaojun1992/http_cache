@@ -212,6 +212,7 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Update Header Cache
+	fmt.Println("13" + routerConfig["cache"])
 	if r.Method == "GET" && routerConfig["cache"] == strconv.Itoa(router.CACHE_ENABLED) {
 		fmt.Println("11")
 		h.updateHeaderCache(cacheKey, resp.Header, routerConfig["ttl"])
