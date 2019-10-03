@@ -204,6 +204,8 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	//Determine if cache by http status code and cache control header
 	fmt.Println("7" + cacheControl)
 	fmt.Println(resp.StatusCode)
+	fmt.Println("8" + routerConfig["host"]+uri)
+	fmt.Println("9" + r.Method)
 	if resp.StatusCode != http.StatusOK || !util.IfCache(cacheControl) {
 		routerConfig["cache"] = strconv.Itoa(router.CACHE_DISABLED)
 	}
