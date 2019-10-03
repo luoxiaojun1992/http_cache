@@ -19,7 +19,6 @@ import (
 	"sync"
 	"syscall"
 	"time"
-	"fmt"
 )
 
 //HTTP Handler
@@ -85,14 +84,11 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if len(redis.Get("header:"+cacheKey+":ttl")) <= 0 {
 				if redis.SetNx("header:"+cacheKey+":update:lock", "1", 5*time.Second) {
 					headerStr = ""
-					fmt.Println("1" + headerStr)
 				} else {
 					headerStr = redis.Get("header:" + cacheKey)
-					fmt.Println("2" + headerStr)
 				}
 			} else {
 				headerStr = redis.Get("header:" + cacheKey)
-				fmt.Println("3" + headerStr)
 			}
 
 			if len(headerStr) > 0 {
@@ -111,14 +107,11 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 			if len(redis.Get("body:"+cacheKey+":ttl")) <= 0 {
 				if redis.SetNx("body:"+cacheKey+":update:lock", "1", 5*time.Second) {
 					bodyStr = ""
-					fmt.Println("4" + bodyStr)
 				} else {
 					bodyStr = redis.Get("body:" + cacheKey)
-					fmt.Println("5" + bodyStr)
 				}
 			} else {
 				bodyStr = redis.Get("body:" + cacheKey)
-				fmt.Println("6" + bodyStr)
 			}
 
 			if len(bodyStr) > 0 {
@@ -202,26 +195,15 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(filter.OnResponse(bodyStr, false, false)))
 
 	//Determine if cache by http status code and cache control header
-	fmt.Println("7" + cacheControl)
-	fmt.Println(resp.StatusCode)
-	fmt.Println("8" + routerConfig["host"]+uri)
-	fmt.Println("9" + r.Method)
-	if resp.StatusCode != http.StatusOK || !util.IfCache(cacheControl) {
-		fmt.Println("10")
-		routerConfig["cache"] = strconv.Itoa(router.CACHE_DISABLED)
-	}
+	if resp.StatusCode == http.StatusOK && util.IfCache(cacheControl) {
+		if r.Method == "GET" && routerConfig["cache"] == strconv.Itoa(router.CACHE_ENABLED) {
+			h.updateHeaderCache(cacheKey, resp.Header, routerConfig["ttl"])
+		}
 
-	//Update Header Cache
-	fmt.Println("13" + routerConfig["cache"])
-	if r.Method == "GET" && routerConfig["cache"] == strconv.Itoa(router.CACHE_ENABLED) {
-		fmt.Println("11")
-		h.updateHeaderCache(cacheKey, resp.Header, routerConfig["ttl"])
-	}
-
-	//Update Body Cache
-	if r.Method == "GET" && routerConfig["cache"] == strconv.Itoa(router.CACHE_ENABLED) {
-		fmt.Println("12")
-		h.updateBodyCache(cacheKey, bodyStr, routerConfig["ttl"])
+		//Update Body Cache
+		if r.Method == "GET" && routerConfig["cache"] == strconv.Itoa(router.CACHE_ENABLED) {
+			h.updateBodyCache(cacheKey, bodyStr, routerConfig["ttl"])
+		}
 	}
 }
 
