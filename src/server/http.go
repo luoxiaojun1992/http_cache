@@ -78,22 +78,21 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 	//Read Cache
 	cacheKey := ""
-	fmt.Println(r.Method)
-	fmt.Println(routerConfig["cache"])
 	if r.Method == "GET" && routerConfig["cache"] == strconv.Itoa(router.CACHE_ENABLED) {
 		cacheKey = routerConfig["host"] + uri
 		headerStr := cache.Get("header:" + cacheKey)
-		fmt.Println("1" + headerStr)
 		if len(headerStr) <= 0 {
 			if len(redis.Get("header:"+cacheKey+":ttl")) <= 0 {
 				if redis.SetNx("header:"+cacheKey+":update:lock", "1", 5*time.Second) {
 					headerStr = ""
+					fmt.Println("1" + headerStr)
 				} else {
 					headerStr = redis.Get("header:" + cacheKey)
+					fmt.Println("2" + headerStr)
 				}
 			} else {
 				headerStr = redis.Get("header:" + cacheKey)
-				fmt.Println(headerStr)
+				fmt.Println("3" + headerStr)
 			}
 
 			if len(headerStr) > 0 {
@@ -108,17 +107,18 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 
 		bodyStr := cache.Get("body:" + cacheKey)
-		fmt.Println("1" + bodyStr)
 		if len(bodyStr) <= 0 {
 			if len(redis.Get("body:"+cacheKey+":ttl")) <= 0 {
 				if redis.SetNx("body:"+cacheKey+":update:lock", "1", 5*time.Second) {
 					bodyStr = ""
+					fmt.Println("4" + bodyStr)
 				} else {
 					bodyStr = redis.Get("body:" + cacheKey)
+					fmt.Println("5" + bodyStr)
 				}
 			} else {
 				bodyStr = redis.Get("body:" + cacheKey)
-				fmt.Println(bodyStr)
+				fmt.Println("6" + bodyStr)
 			}
 
 			if len(bodyStr) > 0 {
@@ -202,6 +202,8 @@ func (h *myHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(filter.OnResponse(bodyStr, false, false)))
 
 	//Determine if cache by http status code and cache control header
+	fmt.Println("7" + cacheControl)
+	fmt.Println(resp.StatusCode)
 	if resp.StatusCode != http.StatusOK || !util.IfCache(cacheControl) {
 		routerConfig["cache"] = strconv.Itoa(router.CACHE_DISABLED)
 	}
