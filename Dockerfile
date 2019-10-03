@@ -11,4 +11,4 @@ RUN dep ensure
 
 EXPOSE 8888
 
-CMD ["sh", "-c", "go", "run", "src/main.go"]
+CMD ["cd", "/go/src/app/src", "&&", "go", "run", "main.go"]
