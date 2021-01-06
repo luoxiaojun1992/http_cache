@@ -3,7 +3,7 @@ LINUX_DIR = ../bin/linux_amd64
 FREEBSD_DIR = ../bin/freebsd_amd64
 WINDOWS_DIR = ../bin/windows_amd64
 
-- install:
+install:
 	cd src && GOOS=darwin GOARCH=amd64 go build -i -v -o http_cache && \
 	tar -zcvf http-cache.darwin-amd64.tar.gz ./http_cache && rm ./http_cache && \
 	mkdir -p $(DARWIN_DIR) && \
